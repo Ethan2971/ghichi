@@ -29,6 +29,7 @@ const DEFAULT_NOTES = {
   dm_khac: [],
 };
 const MAX_HINTS = 8;
+const QUICK_ADD = [5000, 10000, 20000, 50000, 100000, 200000, 500000];
 
 const KEYBOARD = { '/': '÷', '*': '×', x: '×', '-': '−', '+': '+', '.': ',', ',': ',', '(': '(', ')': ')',
   Backspace: 'back', Delete: 'clear', Escape: null };
@@ -52,6 +53,7 @@ function build() {
       <div class="sheet-body">
         <p class="f-note" hidden></p>
 
+        <div class="amount-sticky">
         <button type="button" class="amount-box" data-act="may-tinh" aria-label="Số tiền, bấm để mở máy tính">
           <span class="f-expr num"></span>
           <span class="amount-line">
@@ -59,6 +61,10 @@ function build() {
             <span class="calc-hint" aria-hidden="true">${icon('calculate')}</span>
           </span>
         </button>
+        <div class="chips quick-add" aria-label="Cộng nhanh">
+          ${QUICK_ADD.map((n) => `<button type="button" class="chip" data-add="${n}">+${n / 1000}k</button>`).join('')}
+        </div>
+        </div>
 
         <div class="calc" hidden>
           <div class="calc-keys">
@@ -142,6 +148,7 @@ function onClick(e) {
   if (btn.dataset.act === 'may-tinh') return calcOpen() ? closeCalc() : toggleCalc(true);
   if (btn.dataset.act === 'ap-dung') return applyCalc();
   if (btn.dataset.key) return pressKey(btn.dataset.key);
+  if (btn.dataset.add) return quickAdd(Number(btn.dataset.add));
   if (btn.dataset.hint !== undefined) return pickHint(btn);
   if (btn.dataset.cat) { state.danhMucId = btn.dataset.cat; return paintChoices(); }
   if (btn.dataset.member) { state.nguoiChiId = btn.dataset.member; return paintChoices(); }
@@ -167,7 +174,7 @@ function paintAmount() {
   exprEl.hidden = !showExpr;
   const amountEl = dialog.querySelector('.f-sotien');
   amountEl.textContent = v === null ? (state.expr ? '…' : '0') : fmtNumber(v);
-  amountEl.classList.toggle('empty', !state.expr);
+  amountEl.classList.toggle('is-empty', !state.expr);
   amountEl.classList.toggle('negative', v !== null && v <= 0 && !!state.expr);
 }
 
@@ -202,6 +209,14 @@ function applyCalc() {
   toggleCalc(false);
   clearError();
   return true;
+}
+
+// Cộng nhanh một số tiền vào kết quả hiện tại.
+function quickAdd(n) {
+  const v = currentAmount();
+  state.expr = fromAmount(Math.max(v ?? 0, 0) + n);
+  paintAmount();
+  clearError();
 }
 
 // Thu máy tính bằng icon: giữ kết quả nếu tính được, không báo lỗi khi còn trống.
@@ -287,7 +302,10 @@ async function paintLists() {
   const visibleCats = danhMuc
     .filter((c) => !c.an || c.id === state.danhMucId)
     .sort((a, b) => a.thuTu - b.thuTu);
-  dialog.querySelector('.cat-grid').innerHTML = visibleCats.map((c) => `
+  const grid = dialog.querySelector('.cat-grid');
+  grid.style.setProperty('--cols', Math.max(1, Math.ceil(visibleCats.length / 2)));
+  grid.scrollLeft = 0;
+  grid.innerHTML = visibleCats.map((c) => `
     <button type="button" class="cat" role="radio" data-cat="${esc(c.id)}" style="--c:${esc(c.mau)}">
       <span class="cat-icon">${icon(c.icon)}</span>
       <span class="cat-name">${esc(c.ten)}${c.an ? ' (đã ẩn)' : ''}</span>
@@ -358,12 +376,13 @@ export async function openForm({ id } = {}) {
   dialog.querySelector('#f-ngay').value = state.ngay;
   dialog.querySelector('#f-gio').value = state.gio;
   dialog.querySelector('.f-goiy').hidden = true;
-  for (const el of dialog.querySelectorAll('input, .cat, [data-member], [data-ngay], .amount-box')) {
+  for (const el of dialog.querySelectorAll('input, .cat, [data-member], [data-ngay], .amount-box, [data-add]')) {
     el.disabled = mode === 'xem';
   }
   paintChoices();
   calcEl().hidden = true;
-  toggleCalc(mode === 'them');
+  toggleCalc(false);
+  dialog.querySelector('.sheet-body').scrollTop = 0;
 
   dialog.classList.remove('closing');
   dialog.showModal();
