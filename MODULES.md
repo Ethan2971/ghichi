@@ -13,6 +13,8 @@ Ví dụ:
 - `Sửa GC-FAB: nút + to hơn một chút`
 - `Sửa GC-TK: bỏ đường trung bình trong biểu đồ diễn biến`
 - `Sửa GC-SAOLUU: đổi tên file sao lưu thành ghichi-ngày.json`
+- `Sửa GC-HANMUC: cảnh báo ở 90% thay vì 80%`
+- `Sửa GC-GOP: hiện thêm danh sách khoản sẽ thêm trong bảng xem trước`
 - `Sửa GC-NAV: đổi tên tab Báo cáo thành Thống kê`
 
 Claude sẽ chỉ mở và sửa các file của mã đó, chạy lại kiểm tra tự động, rồi lưu thành một
@@ -65,5 +67,6 @@ Mỗi lần sửa là một commit riêng trên GitHub. Các bản chốt:
 | --- | --- | --- |
 | v0.1.0 | `65ead9d` | Nhập khoản chi, danh sách theo tháng, dữ liệu giả |
 | v0.5.0 | `75e1372` | Lưu thật trên máy, màn chào, cài đặt, kỳ và lọc, báo cáo, sao lưu |
+| v0.8.0 | xem commit `GC-DEPLOY: chốt bản v0.8.0` | Hạn mức, gộp dữ liệu cả nhà, nhắc sao lưu |
 
-Nếu một lần sửa không vừa ý, chỉ cần nhắn `Quay lại GC-FORM như bản v0.5.0` hoặc `Bỏ lần sửa GC-DS vừa rồi`.
+Nếu một lần sửa không vừa ý, chỉ cần nhắn `Quay lại GC-FORM như bản v0.8.0` hoặc `Bỏ lần sửa GC-DS vừa rồi`.
