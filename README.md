@@ -32,3 +32,4 @@ Cách gọi mã để sửa từng phần: xem [MODULES.md](MODULES.md).
 | GC-FAB | js/fab.js, css/fab.css | v0.1: nút cố định. v1.0: kéo thả |
 | GC-DS | js/screen-ds.js, css/ds.css | v0.1: xem theo tháng. v0.5: kỳ, lọc, vuốt |
 | GC-CAIDAT | js/screen-caidat.js, css/caidat.css | Xong (v0.5) |
+| GC-CHAO | js/welcome.js, css/welcome.css | Xong (v0.5) |

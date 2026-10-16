@@ -171,6 +171,22 @@ await test('GC-FORM: mũi tên giờ nhảy tới mốc 15 phút, vòng qua nử
   assert.equal(shiftTime('00:00', -15), '23:45');
 });
 
+await test('GC-LUU: xuất file rồi đọc lại đúng, từ chối file lạ', async () => {
+  const out = await luu.exportData();
+  assert.equal(out.app, 'ghichi');
+  const { data, skipped } = luu.parseFile(JSON.stringify(out));
+  assert.equal(skipped, 0);
+  assert.equal(data.khoanChi.length, out.khoanChi.length);
+  assert.throws(() => luu.parseFile('{"a":1}'), /không phải file của GhiChi/);
+  assert.throws(() => luu.parseFile('xyz'), /JSON/);
+});
+await test('GC-LUU: máy mới nạp sổ gia đình, giữ mã thành viên, không phải sổ chính', async () => {
+  const out = await luu.exportData();
+  await luu.init({ demo: true });
+  // máy demo có khoản chi -> không cho nạp
+  await assert.rejects(luu.joinFamily(luu.parseFile(JSON.stringify(out)).data, { tenMay: 'X', chuMayId: 'tv_me' }), /đã có khoản chi/);
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);

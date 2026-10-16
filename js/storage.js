@@ -138,6 +138,73 @@ export async function init({ demo = false, seed = 20261016 } = {}) {
   emit('*', null, 'init');
 }
 
+// ---------- Xuất dữ liệu, nạp sổ gia đình ----------
+
+export const FILE_APP = 'ghichi';
+
+// Toàn bộ dữ liệu đi theo file (không gồm cài đặt máy). GC-SAOLUU dùng để tải file về.
+export async function exportData() {
+  const device = await currentDevice();
+  const out = {
+    app: FILE_APP,
+    schemaVersion: db.schemaVersion,
+    xuatLuc: nowIso(),
+    tuMay: { id: device.id, ten: device.ten, laSoChinh: !!device.laSoChinh },
+  };
+  for (const t of TABLES) out[t] = clone(db[t]);
+  return out;
+}
+
+// Đọc file GhiChi, kiểm tra từng bản ghi. Trả về { data, skipped } hoặc ném lỗi dễ hiểu.
+export function parseFile(text) {
+  let raw;
+  try { raw = JSON.parse(text); } catch { throw new Error('File không phải dạng JSON'); }
+  if (!raw || raw.app !== FILE_APP) throw new Error('Đây không phải file của GhiChi');
+  if ((raw.schemaVersion ?? 1) > emptyDb().schemaVersion) throw new Error('File từ bản GhiChi mới hơn, hãy cập nhật app');
+  const data = { tuMay: raw.tuMay ?? null };
+  let skipped = 0;
+  for (const t of TABLES) {
+    const rows = Array.isArray(raw[t]) ? raw[t] : [];
+    data[t] = rows.filter((r) => {
+      const ok = validate(t, r).length === 0;
+      if (!ok) skipped++;
+      return ok;
+    });
+  }
+  return { data, skipped };
+}
+
+// Máy mới tham gia gia đình: xoá sổ trống mặc định, lấy thành viên, danh mục, thiết bị, hạn mức
+// từ file của sổ chính, rồi tạo thiết bị cho máy này (không phải sổ chính).
+// Khoản chi của máy khác không chép sang; gộp khoản chi là việc của GC-GOP.
+export async function joinFamily(data, { tenMay, chuMayId }) {
+  if (db.khoanChi.length) throw new Error('Máy này đã có khoản chi, không thể nạp sổ gia đình');
+  if (!data.thanhVien.some((m) => m.id === chuMayId)) throw new Error('Chọn bạn là ai');
+  const next = emptyDb();
+  next.thanhVien = clone(data.thanhVien);
+  next.thietBi = clone(data.thietBi);
+  next.hanMuc = clone(data.hanMuc);
+  const cats = new Map(next.danhMuc.map((c) => [c.id, c]));
+  for (const c of data.danhMuc) cats.set(c.id, clone(c));
+  next.danhMuc = [...cats.values()];
+  const may = createDevice({ ten: tenMay, chuMayId, laSoChinh: false });
+  next.thietBi.push(may);
+  const nextSettings = { ...settings, deviceId: may.id, daChao: true };
+
+  if (idb) {
+    const tx = idb.transaction([...TABLES, SETTINGS_STORE], 'readwrite');
+    for (const t of TABLES) {
+      tx.objectStore(t).clear();
+      for (const r of next[t]) tx.objectStore(t).put(r);
+    }
+    tx.objectStore(SETTINGS_STORE).put(nextSettings, SETTINGS_KEY);
+    await done(tx);
+  }
+  db = next;
+  settings = nextSettings;
+  emit('*', null, 'init');
+}
+
 // 'idb': lưu thật trên máy. 'demo': dữ liệu giả để xem thử. 'memory': máy không cho lưu, tải lại sẽ mất.
 export function storageMode() {
   return mode;
@@ -300,5 +367,5 @@ function buildFakeData(seed) {
     data.hanMuc.push(createBudget({ danhMucId: catId, thang, soTien: amount }, 'may_bo'));
   });
 
-  return { db: data, settings: { deviceId: 'may_bo', theme: 'auto', lanSaoLuuCuoi: null } };
+  return { db: data, settings: { deviceId: 'may_bo', theme: 'auto', lanSaoLuuCuoi: null, daChao: true } };
 }

@@ -6,12 +6,14 @@ import { initNav, showTab } from './nav.js';
 import { initFab } from './fab.js';
 import { initDs } from './screen-ds.js';
 import { initCaiDat } from './screen-caidat.js';
+import { needsWelcome, runWelcome } from './welcome.js';
 import { applyTheme, esc, toast } from './ui.js';
 
 try {
   const demo = new URLSearchParams(location.search).has('demo');
   await luu.init({ demo });
   applyTheme((await luu.getSettings()).theme);
+  if (needsWelcome(await luu.getSettings())) await runWelcome();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async () => applyTheme((await luu.getSettings()).theme));
 
   initNav();
