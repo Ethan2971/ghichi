@@ -4,62 +4,24 @@
 
 import * as luu from './storage.js';
 import { todayStr } from './data.js';
-import { esc, icon, fmtMoney, dayLabel, monthLabel, addMonths, addDays, parseDate, toast } from './ui.js';
+import { esc, icon, fmtMoney, dayLabel, addDays, toast } from './ui.js';
 import { openForm } from './form.js';
+import {
+  periodEvents, getPeriod, setPeriod, periodRange, dayCount, periodChipsHtml, periodNavHtml, handlePeriodClick,
+} from './period.js';
+
+// Để kiểm thử và mã cũ vẫn gọi được từ đây.
+export { periodRange, shiftPeriod, periodLabel } from './period.js';
 
 const HIGHLIGHT_MS = 2200;
 const SWIPE_OPEN = 144; // bề rộng hai nút Sửa, Xoá
-const KY_KEY = 'ghichi.ds.ky';
-const TYPES = ['day', 'week', 'month', 'year'];
+const PERIOD_WORD = { day: 'ngày này', week: 'tuần này', month: 'tháng này', year: 'năm này' };
 
 let root = null;
 let reveal = () => {};
-let period = { type: loadType(), anchor: todayStr() };
 const filter = { nguoi: new Set(), dm: new Set() };
 let filterOpen = false;
 let pendingHighlight = null;
-
-function loadType() {
-  try {
-    const t = localStorage.getItem(KY_KEY);
-    return TYPES.includes(t) ? t : 'month';
-  } catch { return 'month'; }
-}
-function saveType(t) {
-  try { localStorage.setItem(KY_KEY, t); } catch { /* không lưu được thì thôi */ }
-}
-
-// ---------- Kỳ xem ----------
-
-const weekStart = (d) => addDays(d, -((parseDate(d).getDay() + 6) % 7));
-const lastOfMonth = (thang) => addDays(`${addMonths(thang, 1)}-01`, -1);
-const dm = (d) => `${parseDate(d).getDate()}/${parseDate(d).getMonth() + 1}`;
-
-export function periodRange(type, anchor) {
-  if (type === 'day') return [anchor, anchor];
-  if (type === 'week') { const s = weekStart(anchor); return [s, addDays(s, 6)]; }
-  if (type === 'month') { const m = anchor.slice(0, 7); return [`${m}-01`, lastOfMonth(m)]; }
-  const y = anchor.slice(0, 4);
-  return [`${y}-01-01`, `${y}-12-31`];
-}
-
-export function shiftPeriod(type, anchor, n) {
-  if (type === 'day') return addDays(anchor, n);
-  if (type === 'week') return addDays(anchor, 7 * n);
-  if (type === 'month') return `${addMonths(anchor.slice(0, 7), n)}-01`;
-  return `${Number(anchor.slice(0, 4)) + n}-01-01`;
-}
-
-export function periodLabel(type, anchor, today = todayStr()) {
-  if (type === 'day') return dayLabel(anchor, today);
-  if (type === 'month') return monthLabel(anchor.slice(0, 7));
-  if (type === 'year') return `Năm ${anchor.slice(0, 4)}`;
-  const [s, e] = periodRange('week', anchor);
-  const year = e.slice(0, 4) === today.slice(0, 4) ? '' : `/${e.slice(0, 4)}`;
-  return `Tuần ${dm(s)} – ${dm(e)}${year}`;
-}
-
-const PERIOD_WORD = { day: 'ngày này', week: 'tuần này', month: 'tháng này', year: 'năm này' };
 
 // ---------- Khởi động ----------
 
@@ -71,6 +33,7 @@ export function initDs(el, { reveal: revealFn } = {}) {
   root.addEventListener('pointerdown', onPointerDown);
   document.addEventListener('pointerdown', (e) => { if (openRow && !openRow.closest('.swipe').contains(e.target)) closeSwipe(); });
   luu.store.addEventListener('dulieu-doi', onDataChange);
+  periodEvents.addEventListener('ky-doi', () => render());
   return render();
 }
 
@@ -80,19 +43,7 @@ function onClick(e) {
   if (!b || b.disabled) return;
   const d = b.dataset;
 
-  if (d.shift) { period.anchor = shiftPeriod(period.type, period.anchor, Number(d.shift)); render(); return; }
-  if (d.ky) {
-    const today = todayStr();
-    if (d.ky === 'today' || d.ky === 'yesterday') {
-      period = { type: 'day', anchor: d.ky === 'today' ? today : addDays(today, -1) };
-    } else {
-      // Đổi kiểu kỳ nhưng giữ ngày đang xem, để từ Tháng 9 bấm Năm vẫn ra năm chứa tháng 9.
-      period = { type: d.ky, anchor: period.anchor };
-    }
-    saveType(period.type);
-    render();
-    return;
-  }
+  if (handlePeriodClick(b)) return;
   if (b.hasAttribute('data-filter-toggle')) { filterOpen = !filterOpen; render(); return; }
   if (d.fNguoi || d.fDm) {
     const set = d.fNguoi ? filter.nguoi : filter.dm;
@@ -129,8 +80,9 @@ async function onDataChange(e) {
   if (table === 'khoanChi' && ['them', 'sua', 'hoantac'].includes(action)) {
     const r = await luu.get('khoanChi', id);
     if (r) {
-      const [s, end] = periodRange(period.type, period.anchor);
-      if (r.ngay < s || r.ngay > end) period.anchor = r.ngay;
+      const p = getPeriod();
+      const [s, end] = periodRange(p.type, p.anchor);
+      if (r.ngay < s || r.ngay > end) setPeriod({ anchor: r.ngay }, { silent: true });
       // Khoản vừa lưu bị bộ lọc che thì bỏ lọc để người dùng thấy nó.
       if ((filter.nguoi.size && !filter.nguoi.has(r.nguoiChiId)) || (filter.dm.size && !filter.dm.has(r.danhMucId))) {
         filter.nguoi.clear(); filter.dm.clear();
@@ -155,7 +107,7 @@ async function render() {
   const devices = Object.fromEntries(thietBi.map((d) => [d.id, d]));
 
   const today = todayStr();
-  const { type, anchor } = period;
+  const { type, anchor } = getPeriod();
   const [start, end] = periodRange(type, anchor);
   const pass = (k) => (!filter.nguoi.size || filter.nguoi.has(k.nguoiChiId)) && (!filter.dm.size || filter.dm.has(k.danhMucId));
   const shown = khoanChi.filter(pass);
@@ -174,38 +126,24 @@ async function render() {
 
   // Trung bình mỗi ngày: chỉ đếm những ngày đã qua của kỳ.
   const lastDay = end < today ? end : today;
-  const dayCount = lastDay < start ? 0 : Math.round((parseDate(lastDay) - parseDate(start)) / 864e5) + 1;
-  const perDay = rows.length && dayCount ? Math.round(total / dayCount) : 0;
+  const days_ = dayCount(start, lastDay);
+  const perDay = rows.length && days_ ? Math.round(total / days_) : 0;
   const hasToday = start <= today && today <= end;
   const [ws, we] = periodRange('week', today);
   const todayTotal = sum(shown.filter((k) => k.ngay === today));
   const weekTotal = sum(shown.filter((k) => k.ngay >= ws && k.ngay <= we));
 
   const nFilter = filter.nguoi.size + filter.dm.size;
-  const isDay = (d) => type === 'day' && anchor === d;
-  const chip = (ky, label, on) => `<button type="button" class="chip" data-ky="${ky}" aria-pressed="${on}">${label}</button>`;
 
   root.innerHTML = `
     <div class="month-sticky">
     <section class="month-card card">
-      <div class="ky-row">
-        <div class="ky-chips" role="group" aria-label="Kỳ xem">
-          ${chip('today', 'Hôm nay', isDay(today))}
-          ${chip('yesterday', 'Hôm qua', isDay(addDays(today, -1)))}
-          ${chip('week', 'Tuần', type === 'week')}
-          ${chip('month', 'Tháng', type === 'month')}
-          ${chip('year', 'Năm', type === 'year')}
-        </div>
+      ${periodChipsHtml(`
         <button type="button" class="btn-icon ds-filter-btn" data-filter-toggle aria-expanded="${filterOpen}" aria-label="Lọc">
           ${icon('filter_list')}${nFilter ? `<span class="badge">${nFilter}</span>` : ''}
-        </button>
-      </div>
+        </button>`)}
       ${filterOpen ? filterHtml(thanhVien, danhMuc) : ''}
-      <div class="month-nav">
-        <button type="button" class="btn-icon" data-shift="-1" aria-label="Kỳ trước">${icon('chevron_left')}</button>
-        <h2>${esc(periodLabel(type, anchor, today))}</h2>
-        <button type="button" class="btn-icon" data-shift="1" aria-label="Kỳ sau" ${end >= today ? 'disabled' : ''}>${icon('chevron_right')}</button>
-      </div>
+      ${periodNavHtml()}
       <p class="month-total num">${fmtMoney(total)}</p>
       <div class="month-stats">
         <span><b class="num">${rows.length}</b> khoản</span>

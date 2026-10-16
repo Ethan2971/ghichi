@@ -215,6 +215,21 @@ await test('GC-SAOLUU: khôi phục từ file, nhận lại mã máy, chặn fil
   assert.equal((await luu.currentDevice()).id, 'may_me');
 });
 
+await test('GC-TK: so với cùng kỳ trước, cột diễn biến', async () => {
+  const { compareRange, trendBuckets } = await import('../js/screen-tk.js');
+  assert.deepEqual(compareRange('month', '2026-10-05', '2026-10-16'), { cur: ['2026-10-01', '2026-10-16'], prev: ['2026-09-01', '2026-09-16'], partial: true });
+  assert.deepEqual(compareRange('month', '2026-09-05', '2026-10-16').prev, ['2026-08-01', '2026-08-31']);
+  assert.deepEqual(compareRange('month', '2026-03-31', '2026-03-31').prev, ['2026-02-01', '2026-02-28']);
+  assert.deepEqual(compareRange('day', '2026-10-16', '2026-10-16').prev, ['2026-10-15', '2026-10-15']);
+  const rows = [{ ngay: '2026-10-12', soTien: 100 }, { ngay: '2026-10-12', soTien: 50 }, { ngay: '2026-10-14', soTien: 30 }];
+  const w = trendBuckets('week', '2026-10-12', '2026-10-18', rows, '2026-10-16');
+  assert.equal(w.length, 7);
+  assert.deepEqual([w[0].short, w[0].value, w[2].value, w[4].now, w[5].future], ['T2', 150, 30, true, true]);
+  const y = trendBuckets('year', '2026-01-01', '2026-12-31', rows, '2026-10-16');
+  assert.deepEqual([y.length, y[9].value, y[9].now, y[10].future], [12, 180, true, true]);
+  assert.equal(trendBuckets('day', '2026-10-16', '2026-10-16', rows, '2026-10-16').length, 0);
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);

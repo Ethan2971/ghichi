@@ -1,0 +1,82 @@
+/* GC-TK — Tab Báo cáo. */
+
+.tk { padding: calc(10px + env(safe-area-inset-top, 0px)) 0 8px; }
+.tk-kpi { padding: 8px 8px 12px; text-align: center; }
+.tk-total { margin: 0 0 4px; color: var(--expense); font-size: var(--fs-xl); font-weight: 800; letter-spacing: -0.01em; }
+.tk-cmp {
+  display: inline-flex; align-items: center; gap: 6px; margin: 0 8px 6px;
+  font-size: var(--fs-s); color: var(--text-3); text-align: left;
+}
+.tk-cmp .icon { font-size: 20px; flex: none; }
+.tk-cmp.is-up { color: var(--expense); }
+.tk-cmp.is-down { color: var(--primary-strong); }
+.tk-cmp b.num { color: var(--text-2); font-weight: 600; }
+.tk-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; color: var(--text-3); font-size: var(--fs-s); }
+.tk-stats b { color: var(--text-2); font-weight: 600; }
+
+.tk-sec { margin-top: 18px; }
+.tk-sec > h3 { margin: 0 4px 8px; font-size: var(--fs-s); font-weight: 700; color: var(--text-2); }
+.tk-sec > h3 small { font-weight: 500; color: var(--text-3); }
+
+/* Diễn biến: cột dọc, đường trung bình nét đứt */
+.tk-trend { padding: 12px 12px 10px; }
+.tk-pick {
+  display: flex; align-items: baseline; gap: 8px; margin: 0 0 10px; min-height: 1.5em;
+  font-size: var(--fs-s); color: var(--text-2);
+}
+.tk-pick b { margin-left: auto; color: var(--expense); font-size: var(--fs-m); font-weight: 800; }
+.tk-pick-tag {
+  padding: 1px 8px; border-radius: 999px; background: var(--surface-2);
+  font-size: var(--fs-xs); font-weight: 700; color: var(--text-3);
+}
+.tk-chart {
+  position: relative; height: 150px; padding-bottom: 20px;
+  display: flex; align-items: stretch; gap: 4px;
+}
+.tk-chart.is-dense { gap: 2px; }
+.tk-avg {
+  position: absolute; left: 0; right: 0; bottom: calc(20px + (100% - 20px) * var(--avg));
+  border-top: 1.5px dashed color-mix(in srgb, var(--text-3) 70%, transparent);
+  pointer-events: none; z-index: 1;
+}
+.tk-col {
+  flex: 1; min-width: 0; position: relative; padding: 0; border: 0; background: none;
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+}
+.tk-bar {
+  width: 100%; max-width: 28px; border-radius: 6px 6px 2px 2px;
+  background: color-mix(in srgb, var(--expense) 55%, var(--surface));
+  transition: background-color 0.15s;
+}
+.tk-chart.is-dense .tk-bar { border-radius: 3px 3px 1px 1px; }
+.tk-col.is-now .tk-bar, .tk-col.is-picked .tk-bar { background: var(--expense); }
+.tk-col.is-future .tk-bar { background: var(--surface-2); }
+.tk-col.is-future { cursor: default; }
+.tk-col-label {
+  position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+  height: 18px; line-height: 18px; white-space: nowrap;
+  font-size: 0.68rem; color: var(--text-3);
+}
+.tk-col.is-now .tk-col-label { color: var(--expense); font-weight: 800; }
+.tk-legend { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: var(--fs-xs); color: var(--text-3); }
+.tk-legend b { color: var(--text-2); font-weight: 600; }
+.tk-avg-key { width: 18px; border-top: 1.5px dashed var(--text-3); }
+
+/* Theo danh mục, theo người chi: thanh ngang */
+.tk-bars { list-style: none; margin: 0; padding: 0; overflow: hidden; }
+.tk-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
+.tk-item + .tk-item { border-top: 1px solid var(--border); }
+.tk-ic {
+  flex: none; width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c);
+}
+.tk-ic .icon { font-size: 21px; }
+.tk-avatar { background: var(--c); color: #fff; font-weight: 800; }
+.tk-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.tk-item-top { display: flex; align-items: baseline; gap: 8px; }
+.tk-name { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tk-amount { color: var(--expense); font-size: var(--fs-s); font-weight: 700; }
+.tk-track { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.tk-track span { display: block; height: 100%; border-radius: inherit; background: var(--c); }
+.tk-item-sub { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--text-3); }

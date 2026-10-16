@@ -1,0 +1,13 @@
+/* GC-DS — Chip kỳ và mũi tên chuyển kỳ, dùng chung cho Danh sách và Báo cáo. */
+
+.ky-row { display: flex; align-items: center; gap: 4px; }
+.ky-chips {
+  flex: 1; min-width: 0; display: flex; gap: 4px;
+  overflow-x: auto; scrollbar-width: none; padding: 2px 2px;
+}
+.ky-chips::-webkit-scrollbar { display: none; }
+.ky-chips .chip { flex: 1 1 auto; justify-content: center; min-height: 32px; padding: 0 6px; font-size: 0.8rem; white-space: nowrap; }
+.ky-chips .chip[aria-pressed="true"] { font-weight: 700; color: var(--primary-strong); }
+
+.month-nav { display: flex; align-items: center; justify-content: space-between; }
+.month-nav h2 { font-size: var(--fs-m); font-weight: 600; color: var(--text-2); }

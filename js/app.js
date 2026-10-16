@@ -5,6 +5,7 @@ import * as luu from './storage.js';
 import { initNav, showTab } from './nav.js';
 import { initFab } from './fab.js';
 import { initDs } from './screen-ds.js';
+import { initTk } from './screen-tk.js';
 import { initCaiDat } from './screen-caidat.js';
 import { needsWelcome, runWelcome } from './welcome.js';
 import { applyTheme, esc, toast } from './ui.js';
@@ -18,6 +19,7 @@ try {
 
   initNav();
   await initDs(document.getElementById('tab-ds'), { reveal: () => showTab('ds', { replace: true }) });
+  await initTk(document.getElementById('tab-tk'));
   await initCaiDat(document.getElementById('tab-caidat'));
   initFab();
 
