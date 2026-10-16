@@ -5,7 +5,7 @@
 // Bản mới không tự thay ngay: app hỏi "Có bản mới" (js/pwa.js) rồi mới chuyển, để không mất dữ liệu đang nhập.
 // VERSION phải trùng APP_VERSION trong js/version.js (kiểm tra tự động sẽ báo nếu lệch).
 
-const VERSION = '1.0.0-dev.5';
+const VERSION = '1.0.0-dev.6';
 const APP_CACHE = `ghichi-app-${VERSION}`;
 const FONT_CACHE = 'ghichi-fonts';
 const APP_FILES = [
@@ -25,6 +25,7 @@ const APP_FILES = [
     '/js/fab.js',
     '/js/form.js',
     '/js/merge.js',
+    '/js/motion.js',
     '/js/nav.js',
     '/js/period.js',
     '/js/picker.js',
@@ -43,6 +44,7 @@ const APP_FILES = [
     '/css/fab.css',
     '/css/form.css',
     '/css/merge.css',
+    '/css/motion.css',
     '/css/nav.css',
     '/css/period.css',
     '/css/pwa.css',

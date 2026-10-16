@@ -1,0 +1,42 @@
+/* GC-HIEUUNG — Hiệu ứng chuyển cảnh và phản hồi khi chạm. Các class mo-* do js/motion.js gắn vào trong chốc lát.
+   Máy bật "giảm chuyển động" thì theme.css đã tắt mọi hiệu ứng. */
+
+/* ---------- Chuyển tab ---------- */
+main > section.mo-tab-r { animation: mo-from-r 0.28s var(--ease); }
+main > section.mo-tab-l { animation: mo-from-l 0.28s var(--ease); }
+@keyframes mo-from-r { from { opacity: 0; transform: translateX(28px); } }
+@keyframes mo-from-l { from { opacity: 0; transform: translateX(-28px); } }
+
+/* Thanh tab: viên nền nở ra khi chọn, chạm thì nhún. */
+.bottom-nav button[aria-current="page"] .pill { animation: mo-pill 0.3s var(--ease); }
+@keyframes mo-pill { from { transform: scaleX(0.55); opacity: 0.4; } }
+.bottom-nav button:active .pill { transform: scale(0.9); }
+.bottom-nav .pill { transition: background-color 0.2s var(--ease), transform 0.12s var(--ease); }
+
+/* ---------- Đổi kỳ (Hôm nay, Tuần, Tháng... và mũi tên lùi/tiến) ---------- */
+#tab-ds.mo-ky-r :is(.day, .empty), #tab-tk.mo-ky-r .tk-sec { animation: mo-from-r 0.3s var(--ease) backwards; }
+#tab-ds.mo-ky-l :is(.day, .empty), #tab-tk.mo-ky-l .tk-sec { animation: mo-from-l 0.3s var(--ease) backwards; }
+#tab-ds.mo-ky-up :is(.day, .empty), #tab-tk.mo-ky-up .tk-sec { animation: mo-rise 0.3s var(--ease) backwards; }
+@keyframes mo-rise { from { opacity: 0; transform: translateY(14px); } }
+/* Các nhóm lần lượt hiện ra, nhóm sau chậm hơn một chút. */
+:is(#tab-ds, #tab-tk)[class*="mo-ky"] :is(.day, .tk-sec):nth-of-type(2) { animation-delay: 0.04s; }
+:is(#tab-ds, #tab-tk)[class*="mo-ky"] :is(.day, .tk-sec):nth-of-type(3) { animation-delay: 0.08s; }
+:is(#tab-ds, #tab-tk)[class*="mo-ky"] :is(.day, .tk-sec):nth-of-type(n+4) { animation-delay: 0.12s; }
+
+/* ---------- Biểu đồ Báo cáo: cột và thanh mọc lên ---------- */
+#tab-tk.mo-grow .tk-bar { transform-origin: bottom; animation: mo-grow-y 0.5s var(--ease) backwards; }
+#tab-tk.mo-grow .tk-track > span { transform-origin: left; animation: mo-grow-x 0.55s var(--ease) backwards; }
+#tab-tk.mo-grow .tk-col:nth-child(odd) .tk-bar { animation-delay: 0.03s; }
+@keyframes mo-grow-y { from { transform: scaleY(0); } }
+@keyframes mo-grow-x { from { transform: scaleX(0); } }
+
+/* ---------- Phản hồi khi chạm ---------- */
+.chip { transition: transform 0.12s var(--ease), background-color 0.15s, border-color 0.15s, color 0.15s; }
+.chip:active, .btn-icon:active { transform: scale(0.93); }
+.btn-icon { transition: transform 0.12s var(--ease), background-color 0.15s; }
+.row:active, .cd-row:active, .tk-item-in:active { background: var(--surface-2); }
+.tk-col:active .tk-bar { filter: brightness(0.9); }
+
+/* Khoản vừa lưu: dòng nảy nhẹ khi xuất hiện (tô sáng vẫn do ds.css lo). */
+.row.moi { animation: row-moi 2.2s var(--ease), mo-pop 0.35s var(--ease); }
+@keyframes mo-pop { 0% { transform: scale(0.97); } 60% { transform: scale(1.01); } 100% { transform: none; } }

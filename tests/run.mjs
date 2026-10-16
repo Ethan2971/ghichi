@@ -341,6 +341,18 @@ await test('GC-FAB: thả nút thì hít mép gần nhất, cách mép 16px, kh�
   assert.equal(Math.round(fabPlace(p, fabBounds(900, 412, 348)).y), Math.round(16 + p.t * (348 - 16 - 60 - 16)));
 });
 
+await test('GC-HIEUUNG: chạy số tổng tiền từ cũ sang mới, đọc đúng số tiền', async () => {
+  const { parseMoneyText, countAt } = await import('../js/motion.js');
+  assert.equal(parseMoneyText('11.400.000 ₫'), 11400000);
+  assert.equal(parseMoneyText('0 ₫'), 0);
+  assert.equal(countAt(100000, 250000, 0), 100000);
+  assert.equal(countAt(100000, 250000, 1), 250000);
+  assert.equal(countAt(100000, 250000, 2), 250000);
+  const mid = countAt(100000, 250000, 0.5);
+  assert.ok(mid > 175000 && mid < 250000, 'chậm dần về cuối');
+  assert.equal(countAt(500, 200, 1), 200);
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);

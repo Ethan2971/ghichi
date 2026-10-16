@@ -35,6 +35,7 @@ Nếu không chắc phần đó thuộc mã nào, cứ mô tả điều thấy t
 | GC-GOP | Nhóm Gộp dữ liệu cả nhà trong Cài đặt: sổ chính gộp file của mọi người và gửi file tổng; máy thành viên gửi file và nhận file tổng; xem trước thêm, sửa, xoá; gộp lần cuối | js/merge.js, css/merge.css | Riêng |
 | GC-SAOLUU | Nhóm Sao lưu trong Cài đặt: tải file sao lưu, gửi file qua Zalo, khôi phục từ file, ngày sao lưu lần cuối, chọn nhịp nhắc; dải nhắc sao lưu trên cùng màn hình | js/backup.js, css/backup.css | Riêng |
 | GC-PWA | Cài lên màn hình chính, chạy khi mất mạng, biểu tượng tròn 3D có dấu + (vẽ bằng tools/make-icons.py), lối tắt Thêm khoản chi, thông báo thêm nhanh có nút Thêm khoản chi (mở bằng app đã cài) và Xem hôm nay (đưa Danh sách, Báo cáo về Hôm nay), khung chờ Danh sách trong index.html và modulepreload để mở app nhanh, dải "Có bản mới", nhóm Ứng dụng trong Cài đặt | js/pwa.js, sw.js, manifest.webmanifest, icons/, tools/make-icons.py, css/pwa.css | Riêng |
+| GC-HIEUUNG | Hiệu ứng: chuyển tab trượt, đổi kỳ trượt theo hướng, tổng tiền chạy số, biểu đồ mọc lên, phản hồi khi chạm, rung khi lưu/xoá. Chỉ nghe sự kiện, không sửa các tab | js/motion.js, css/motion.css | Riêng |
 | GC-NAV | Thanh 3 tab dưới đáy, khung trang, thứ tự khởi động app | js/nav.js, js/app.js, css/nav.css, index.html | Riêng |
 | GC-THEME | Màu sắc, chữ, chế độ tối, nút, chip, ô nhập, thông báo nhỏ, định dạng tiền và ngày | css/theme.css, js/ui.js | Dùng chung |
 | GC-DATA | Cấu trúc dữ liệu, danh mục mặc định, quy tắc ai được sửa, kiểm tra hợp lệ | js/data.js | Dùng chung |

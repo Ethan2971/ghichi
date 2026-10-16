@@ -35,6 +35,7 @@ Cách gọi mã để sửa từng phần: xem [MODULES.md](MODULES.md).
 | GC-HANMUC | js/budget.js, css/budget.css | Xong (v0.8) |
 | GC-GOP | js/merge.js, css/merge.css | Xong (v0.8) |
 | GC-PWA | js/pwa.js, sw.js, manifest.webmanifest, icons/, tools/make-icons.py, css/pwa.css | Xong (v1.0) |
+| GC-HIEUUNG | js/motion.js, css/motion.css | Xong (v1.0) |
 | GC-CAIDAT | js/screen-caidat.js, css/caidat.css | Xong (v0.5) |
 | GC-CHAO | js/welcome.js, css/welcome.css | Xong (v0.5) |
 | GC-SAOLUU | js/backup.js, css/backup.css | Xong (v0.8): tải, gửi, khôi phục file JSON, nhắc sao lưu |

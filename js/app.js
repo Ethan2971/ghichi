@@ -9,6 +9,7 @@ import { initTk } from './screen-tk.js';
 import { initBudget } from './budget.js';
 import { initBackupReminder } from './backup.js';
 import { initPwa, showToday } from './pwa.js';
+import { initMotion } from './motion.js';
 import { openForm } from './form.js';
 import { initCaiDat } from './screen-caidat.js';
 import { needsWelcome, runWelcome } from './welcome.js';
@@ -39,6 +40,7 @@ try {
   initBudget();
   initBackupReminder();
   initPwa();
+  initMotion();
   // Lối tắt trên biểu tượng app và nút trên thông báo khi app chưa mở: /?them mở bảng nhập, /?homnay mở Danh sách hôm nay.
   openFromUrl(location.href);
   // App đã mở sẵn mà được gọi lại (manifest launch_handler focus-existing): đường dẫn mới đến qua launchQueue.
