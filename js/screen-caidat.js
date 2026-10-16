@@ -1,12 +1,13 @@
-// GC-CAIDAT — Tab Cài đặt: máy này, giao diện sáng tối, danh mục, thành viên, chỗ cho nhóm Sao lưu (GC-SAOLUU), thông tin app.
+// GC-CAIDAT — Tab Cài đặt: máy này, giao diện sáng tối, danh mục, thành viên, chỗ cho nhóm Hạn mức (GC-HANMUC) và Sao lưu (GC-SAOLUU), thông tin app.
 // Xoá danh mục hoặc thành viên = ẩn đi (khoản chi cũ vẫn giữ, hiện kèm "(đã ẩn)"), có thể hiện lại.
 // Đọc ghi qua GC-LUU; các màn hình khác tự cập nhật nhờ sự kiện 'dulieu-doi'.
 
 import * as luu from './storage.js';
-import { canEdit, createCategory, createMember } from './data.js';
-import { esc, icon, applyTheme, toast } from './ui.js';
+import { canEdit, createCategory, createMember, todayStr } from './data.js';
+import { esc, icon, applyTheme, toast, monthLabel } from './ui.js';
 import { APP_VERSION } from './version.js';
 import { mountBackup } from './backup.js';
+import { mountBudget } from './budget.js';
 
 const ICONS = [
   'restaurant', 'shopping_cart', 'bolt', 'local_gas_station', 'school', 'medical_services',
@@ -36,7 +37,7 @@ export function initCaiDat(el) {
   root = el;
   root.addEventListener('click', onClick);
   luu.store.addEventListener('dulieu-doi', (e) => {
-    if (['*', 'danhMuc', 'thanhVien', 'thietBi', 'caiDat'].includes(e.detail.table)) render();
+    if (['*', 'danhMuc', 'thanhVien', 'thietBi', 'caiDat', 'hanMuc', 'khoanChi'].includes(e.detail.table)) render();
   });
   return render();
 }
@@ -87,13 +88,18 @@ async function render() {
       ${groupHtml('thanhVien', 'Thành viên', thanhVien, device)}
 
       <section class="cd-group">
+        <h3>Hạn mức ${esc(monthLabel(todayStr().slice(0, 7)).toLowerCase())}</h3>
+        <div class="hm"></div>
+      </section>
+
+      <section class="cd-group">
         <h3>Sao lưu</h3>
         <div class="bk"></div>
       </section>
 
       <p class="cd-about muted">GhiChi ${esc(APP_VERSION)} · ${esc(MODE_NOTE[luu.storageMode()])}</p>
     </div>`;
-  await mountBackup(root.querySelector('.bk'));
+  await Promise.all([mountBudget(root.querySelector('.hm')), mountBackup(root.querySelector('.bk'))]);
 }
 
 function groupHtml(table, title, rows, device) {

@@ -1,0 +1,64 @@
+/* GC-HANMUC — Hạn mức: nhóm trong Cài đặt, bảng đặt hạn mức, màu thanh hạn mức (Báo cáo dùng chung). */
+
+/* Thanh đã chi so với hạn mức: xanh, vàng từ 80%, đỏ khi vượt */
+.hm-track { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.hm-track > span { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+.hm-track.near > span { background: var(--warning); }
+.hm-track.over > span { background: var(--expense); }
+.hm-over-text { color: var(--expense); font-weight: 700; }
+
+/* Nhóm Hạn mức trong Cài đặt */
+.hm-row .cd-text { gap: 4px; }
+.hm-line { display: flex; align-items: baseline; gap: 8px; }
+.hm-line .cd-main { flex: 1; min-width: 0; }
+.hm-amount { font-size: var(--fs-s); font-weight: 700; color: var(--text-2); }
+.hm-row .hm-track { height: 6px; }
+.hm-help { display: flex; gap: 4px; margin: 8px 6px 0; color: var(--text-3); font-size: var(--fs-xs); line-height: 1.45; }
+.hm-help .icon.tiny { font-size: 15px; }
+
+/* Bảng đặt hạn mức */
+.hm-sheet {
+  width: 100%; max-width: 560px; max-height: 92dvh;
+  margin: auto auto 0; padding: 0; border: 0;
+  border-radius: var(--radius-l) var(--radius-l) 0 0;
+  background: var(--surface); color: var(--text);
+  box-shadow: var(--shadow-2); overflow: hidden;
+}
+.hm-sheet[open] { animation: hm-in 0.25s var(--ease); }
+.hm-sheet::backdrop { background: rgb(0 0 0 / 0.45); }
+@keyframes hm-in { from { transform: translateY(100%); } }
+@media (min-width: 720px) { .hm-sheet { margin: auto; border-radius: var(--radius-l); } }
+.hm-sheet form { display: flex; flex-direction: column; max-height: inherit; }
+.hm-head { display: flex; align-items: center; padding: 8px; flex: none; }
+.hm-head h2 { flex: 1; text-align: center; font-size: var(--fs-m); font-weight: 700; }
+.hm-body { overflow-y: auto; padding: 4px 16px 8px; display: flex; flex-direction: column; gap: 14px; }
+.hm-body h4 { margin: 0 0 8px; font-size: var(--fs-s); font-weight: 600; color: var(--text-2); }
+.hm-cat { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: var(--fs-l); }
+.hm-cats { display: flex; flex-wrap: wrap; gap: 8px; }
+.hm-cats .icon.tiny { font-size: 18px; color: var(--c); }
+.hm-month { display: flex; align-items: center; justify-content: space-between; color: var(--text-2); font-size: var(--fs-s); }
+.hm-input {
+  display: flex; align-items: baseline; justify-content: center; gap: 8px;
+  padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-m);
+}
+.hm-input:focus-within { border-color: var(--primary); }
+.hm-input input {
+  width: 100%; min-width: 0; border: 0; outline: none; background: none; text-align: right;
+  font-size: var(--fs-amount); font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums;
+}
+.hm-input span { flex: none; color: var(--text-3); font-weight: 600; }
+.hm-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.hm-quick .chip { min-height: 32px; padding: 0 12px; font-weight: 600; color: var(--primary-strong); background: var(--primary-soft); border-color: transparent; }
+.hm-note {
+  display: flex; gap: 8px; margin: 0; padding: 10px 12px; border-radius: var(--radius-s);
+  background: var(--surface-2); color: var(--text-2); font-size: var(--fs-s); line-height: 1.45;
+}
+.hm-note .icon { font-size: 20px; flex: none; }
+.hm-error { margin: 0; min-height: 1.2em; color: var(--danger); font-size: var(--fs-s); font-weight: 600; }
+.hm-foot {
+  flex: none; display: flex; gap: 8px;
+  padding: 12px 16px calc(12px + var(--safe-b));
+  border-top: 1px solid var(--border);
+}
+.hm-foot .btn { flex: 1; }
+.hm-off { color: var(--danger); }

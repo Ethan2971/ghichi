@@ -230,6 +230,25 @@ await test('GC-TK: so với cùng kỳ trước, cột diễn biến', async () 
   assert.equal(trendBuckets('day', '2026-10-16', '2026-10-16', rows, '2026-10-16').length, 0);
 });
 
+await test('GC-HANMUC: kế thừa tháng trước, 0 là bỏ, cộng cả năm, mức cảnh báo', async () => {
+  const { budgetFor, budgetForPeriod, budgetLevel } = await import('../js/budget.js');
+  const hm = [
+    data.createBudget({ danhMucId: 'dm_di_cho', thang: '2026-03', soTien: 5000000 }, 'may_bo'),
+    data.createBudget({ danhMucId: 'dm_di_cho', thang: '2026-08', soTien: 6000000 }, 'may_bo'),
+    data.createBudget({ danhMucId: 'dm_di_cho', thang: '2026-11', soTien: 0 }, 'may_bo'),
+    { ...data.createBudget({ danhMucId: 'dm_an_uong', thang: '2026-01', soTien: 1000000 }, 'may_bo'), daXoa: true },
+  ];
+  assert.equal(budgetFor(hm, 'dm_di_cho', '2026-02'), null);
+  assert.deepEqual(budgetFor(hm, 'dm_di_cho', '2026-06'), { soTien: 5000000, tuThang: '2026-03' });
+  assert.equal(budgetFor(hm, 'dm_di_cho', '2026-10').soTien, 6000000);
+  assert.equal(budgetFor(hm, 'dm_di_cho', '2026-12'), null);
+  assert.equal(budgetFor(hm, 'dm_an_uong', '2026-05'), null);
+  assert.equal(budgetForPeriod(hm, 'dm_di_cho', 'month', '2026-09-10'), 6000000);
+  assert.equal(budgetForPeriod(hm, 'dm_di_cho', 'year', '2026-09-10'), 5 * 5000000 + 3 * 6000000);
+  assert.equal(budgetForPeriod(hm, 'dm_di_cho', 'week', '2026-09-10'), 0);
+  assert.deepEqual([budgetLevel(70, 100), budgetLevel(80, 100), budgetLevel(100, 100), budgetLevel(5, 0)], ['', 'near', 'over', '']);
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);

@@ -1,11 +1,12 @@
 // GC-TK — Tab Báo cáo theo kỳ đang chọn (dùng chung kỳ với Danh sách):
 // tổng chi và so với kỳ trước, theo danh mục, theo người chi, diễn biến theo ngày hoặc theo tháng.
 // Mọi con số tính lại từ bảng Khoản chi mỗi lần vẽ, không lưu riêng.
-// Thanh hạn mức theo danh mục sẽ thêm khi có GC-HANMUC (v0.8).
+// Kỳ Tháng, Năm: danh mục có hạn mức (GC-HANMUC) hiện thanh đã chi so với hạn mức; bấm để sửa (sổ chính).
 
 import * as luu from './storage.js';
 import { todayStr } from './data.js';
 import { esc, icon, fmtMoney, addDays, parseDate } from './ui.js';
+import { budgetForPeriod, budgetLevel, openBudgetSheet } from './budget.js';
 import {
   periodEvents, getPeriod, periodRange, shiftPeriod, dayCount, rangeLabel,
   periodChipsHtml, periodNavHtml, handlePeriodClick,
@@ -21,7 +22,7 @@ export function initTk(el) {
   root = el;
   root.addEventListener('click', onClick);
   luu.store.addEventListener('dulieu-doi', (e) => {
-    if (['*', 'khoanChi', 'danhMuc', 'thanhVien'].includes(e.detail.table)) render();
+    if (['*', 'khoanChi', 'danhMuc', 'thanhVien', 'hanMuc', 'thietBi'].includes(e.detail.table)) render();
   });
   periodEvents.addEventListener('ky-doi', () => render());
   return render();
@@ -32,6 +33,10 @@ function onClick(e) {
   if (!b || b.disabled) return;
   if (handlePeriodClick(b)) return;
   if (b.dataset.col !== undefined) selectCol(Number(b.dataset.col));
+  if (b.dataset.hmCat !== undefined) {
+    const { anchor } = getPeriod();
+    openBudgetSheet(b.dataset.hmCat || null, anchor.slice(0, 7));
+  }
 }
 
 // ---------- Tính toán (tách riêng để kiểm thử) ----------
@@ -91,8 +96,8 @@ function groupBy(rows, key) {
 
 async function render() {
   if (!root) return;
-  const [khoanChi, danhMuc, thanhVien] = await Promise.all([
-    luu.list('khoanChi'), luu.list('danhMuc'), luu.list('thanhVien'),
+  const [khoanChi, danhMuc, thanhVien, hanMuc, device] = await Promise.all([
+    luu.list('khoanChi'), luu.list('danhMuc'), luu.list('thanhVien'), luu.list('hanMuc'), luu.currentDevice(),
   ]);
   const cats = Object.fromEntries(danhMuc.map((c) => [c.id, c]));
   const members = Object.fromEntries(thanhVien.map((m) => [m.id, m]));
@@ -111,6 +116,20 @@ async function render() {
 
   buckets = trendBuckets(type, start, end, rows, today);
 
+  // Hạn mức chỉ so ở Tháng, Năm; danh mục ẩn thì bỏ.
+  const budgets = new Map();
+  if (type === 'month' || type === 'year') {
+    for (const c of danhMuc) {
+      const v = c.an ? 0 : budgetForPeriod(hanMuc, c.id, type, anchor);
+      if (v) budgets.set(c.id, v);
+    }
+  }
+  const catGroups = groupBy(rows, 'danhMucId');
+  for (const id of budgets.keys()) if (!catGroups.some((g) => g.id === id)) catGroups.push({ id, total: 0, count: 0 });
+  const budgetTotal = [...budgets.values()].reduce((t, v) => t + v, 0);
+  const budgetSpent = catGroups.filter((g) => budgets.has(g.id)).reduce((t, g) => t + g.total, 0);
+  const canSet = type === 'month' && device.laSoChinh;
+
   root.innerHTML = `
     <div class="tk">
       <section class="card tk-kpi">
@@ -122,14 +141,20 @@ async function render() {
           <span><b class="num">${rows.length}</b> khoản</span>
           ${type === 'day' ? '' : `<span>TB <b class="num">${fmtMoney(perDay)}</b>/ngày</span>`}
         </div>
+        ${budgetTotal ? `
+        <div class="tk-budget ${budgetLevel(budgetSpent, budgetTotal)}">
+          <div class="tk-budget-top"><span>Hạn mức các danh mục</span>
+            <span><b class="num">${fmtMoney(budgetSpent)}</b> / ${fmtMoney(budgetTotal)}</span></div>
+          <div class="tk-track hm-track ${budgetLevel(budgetSpent, budgetTotal)}"><span style="width:${Math.min(100, (budgetSpent / budgetTotal) * 100)}%"></span></div>
+        </div>` : ''}
       </section>
 
-      ${rows.length ? `
-        ${buckets.length ? trendHtml(type) : ''}
-        ${barsHtml('Theo danh mục', groupBy(rows, 'danhMucId'), total, (id) => {
+      ${rows.length || budgets.size ? `
+        ${buckets.length && rows.length ? trendHtml(type) : ''}
+        ${barsHtml('Theo danh mục', catGroups, total, (id) => {
           const c = cats[id] ?? { ten: 'Không rõ', icon: 'help', mau: '#64748B' };
-          return { name: c.an ? `${c.ten} (đã ẩn)` : c.ten, color: c.mau, badge: `<span class="tk-ic" style="--c:${esc(c.mau)}">${icon(c.icon)}</span>` };
-        })}
+          return { name: c.an ? `${c.ten} (đã ẩn)` : c.ten, color: c.mau, budget: budgets.get(id) ?? 0, edit: canSet && !c.an ? id : null, badge: `<span class="tk-ic" style="--c:${esc(c.mau)}">${icon(c.icon)}</span>` };
+        }, canSet ? `<button type="button" class="tk-sec-act" data-hm-cat="">${icon('savings', 'tiny')}Đặt hạn mức</button>` : '')}
         ${barsHtml('Theo người chi', groupBy(rows, 'nguoiChiId'), total, (id) => {
           const m = members[id] ?? { ten: 'Không rõ', mau: '#64748B' };
           return { name: m.an ? `${m.ten} (đã ẩn)` : m.ten, color: m.mau, badge: `<span class="tk-ic tk-avatar" style="--c:${esc(m.mau)}">${esc(m.ten.slice(0, 1).toUpperCase())}</span>` };
@@ -199,28 +224,44 @@ function selectCol(i) {
   pick.innerHTML = `${i === null ? '<span class="tk-pick-tag">Cao nhất</span>' : ''}<span>${esc(b.label)}</span><b class="num">${fmtMoney(b.value)}</b>`;
 }
 
-function barsHtml(title, groups, total, info) {
+function barsHtml(title, groups, total, info, action = '') {
   const max = groups[0]?.total || 1;
   return `
     <section class="tk-sec">
-      <h3>${title}</h3>
+      <h3>${title}${action}</h3>
       <ul class="card tk-bars">
         ${groups.map((g) => {
           const it = info(g.id);
           const pct = total ? Math.round((g.total / total) * 1000) / 10 : 0;
-          return `
-            <li class="tk-item" style="--c:${esc(it.color)}">
+          const tag = it.edit ? 'button' : 'div';
+          const body = `
               ${it.badge}
               <div class="tk-item-body">
                 <div class="tk-item-top">
                   <span class="tk-name">${esc(it.name)}</span>
-                  <b class="tk-amount num">${fmtMoney(g.total)}</b>
+                  <b class="tk-amount num">${fmtMoney(g.total)}</b>${it.budget ? `<span class="tk-of num">/ ${fmtMoney(it.budget)}</span>` : ''}
                 </div>
-                <div class="tk-track"><span style="width:${(g.total / max) * 100}%"></span></div>
-                <div class="tk-item-sub"><span>${g.count} khoản</span><span class="num">${String(pct).replace('.', ',')}%</span></div>
-              </div>
+                ${it.budget ? budgetTrack(g.total, it.budget) : `<div class="tk-track"><span style="width:${(g.total / max) * 100}%"></span></div>`}
+                <div class="tk-item-sub"><span>${g.count} khoản${it.budget ? ` · ${budgetLeft(g.total, it.budget)}` : ''}</span><span class="num">${String(pct).replace('.', ',')}%</span></div>
+              </div>`;
+          return `
+            <li class="tk-item" style="--c:${esc(it.color)}">
+              <${tag} ${it.edit ? `type="button" class="tk-item-in" data-hm-cat="${esc(it.edit)}"` : 'class="tk-item-in"'}>${body}</${tag}>
             </li>`;
         }).join('')}
       </ul>
     </section>`;
+}
+
+// Thanh đã chi so với hạn mức: xanh bình thường, vàng từ 80%, đỏ khi vượt.
+function budgetTrack(spent, budget) {
+  const lv = budgetLevel(spent, budget);
+  return `<div class="tk-track hm-track ${lv}"><span style="width:${Math.min(100, (spent / budget) * 100)}%"></span></div>`;
+}
+
+function budgetLeft(spent, budget) {
+  const pct = Math.round((spent / budget) * 100);
+  return spent > budget
+    ? `<b class="hm-over-text">vượt ${fmtMoney(spent - budget)}</b>`
+    : `${pct}% hạn mức, còn ${fmtMoney(budget - spent)}`;
 }
