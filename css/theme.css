@@ -1,0 +1,207 @@
+/* GC-THEME — Màu, chữ, khoảng cách, chế độ tối và các thành phần dùng chung.
+   Dùng chung cho mọi màn hình: khi sửa cần xem lại GC-NAV, GC-FORM, GC-FAB, GC-DS.
+   Màu theo tỉ lệ 60-30-10: nền (60) · bề mặt thẻ (30) · màu nhấn xanh ngọc (10). */
+
+:root {
+  --primary: #10B981;
+  --primary-strong: #059669;
+  --on-primary: #FFFFFF;
+  --primary-soft: #D1FAE5;
+
+  --bg: #F6F7F9;
+  --surface: #FFFFFF;
+  --surface-2: #EEF1F4;
+  --border: #E2E6EA;
+  --text: #111827;
+  --text-2: #4B5563;
+  --text-3: #8A94A3;
+  --danger: #DC2626;
+  --warning: #D97706;
+  --highlight: color-mix(in srgb, var(--primary) 22%, transparent);
+
+  --radius-s: 10px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+  --shadow-1: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.05);
+  --shadow-2: 0 6px 20px rgb(15 23 42 / 0.14);
+  --shadow-fab: 0 8px 24px color-mix(in srgb, var(--primary) 45%, transparent);
+
+  --font: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fs-xs: 0.75rem;
+  --fs-s: 0.875rem;
+  --fs-m: 1rem;
+  --fs-l: 1.25rem;
+  --fs-xl: clamp(1.5rem, 5vw, 1.875rem);
+  --fs-amount: clamp(2.25rem, 10vw, 3rem);
+
+  --nav-h: 64px;
+  --appbar-h: 56px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary: #34D399;
+    --primary-strong: #10B981;
+    --on-primary: #052E22;
+    --primary-soft: #064E3B;
+    --bg: #0E1116;
+    --surface: #171B22;
+    --surface-2: #222833;
+    --border: #2A313C;
+    --text: #F3F4F6;
+    --text-2: #B6BDC8;
+    --text-3: #7D8796;
+    --danger: #F87171;
+    --warning: #FBBF24;
+    --shadow-1: none;
+    --shadow-2: 0 8px 28px rgb(0 0 0 / 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --primary: #34D399;
+  --primary-strong: #10B981;
+  --on-primary: #052E22;
+  --primary-soft: #064E3B;
+  --bg: #0E1116;
+  --surface: #171B22;
+  --surface-2: #222833;
+  --border: #2A313C;
+  --text: #F3F4F6;
+  --text-2: #B6BDC8;
+  --text-3: #7D8796;
+  --danger: #F87171;
+  --warning: #FBBF24;
+  --shadow-1: none;
+  --shadow-2: 0 8px 28px rgb(0 0 0 / 0.5);
+  color-scheme: dark;
+}
+
+/* ---------- Nền tảng ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--fs-m);
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100dvh;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+h1, h2, h3 { margin: 0; line-height: 1.25; }
+.muted { color: var(--text-3); font-size: var(--fs-s); }
+.num { font-variant-numeric: tabular-nums; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Biểu tượng Material Symbols Rounded */
+.icon {
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  user-select: none;
+}
+.icon.fill { font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24; }
+
+/* ---------- Thẻ ---------- */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-1);
+  border: 1px solid var(--border);
+}
+
+/* ---------- Nút ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 0 20px;
+  border-radius: 999px; border: 0;
+  font-weight: 600; font-size: var(--fs-m);
+  transition: transform 0.12s var(--ease), background-color 0.2s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--primary); color: var(--on-primary); }
+.btn-primary:hover { background: var(--primary-strong); }
+.btn-tonal { background: var(--surface-2); color: var(--text); }
+.btn-danger { background: transparent; color: var(--danger); }
+.btn-icon {
+  width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+  display: inline-grid; place-items: center;
+  background: transparent; color: var(--text-2);
+}
+.btn-icon:hover { background: var(--surface-2); }
+.btn-icon:disabled { opacity: 0.35; cursor: default; background: transparent; }
+
+/* ---------- Chip ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 0 14px;
+  border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-2);
+  font-size: var(--fs-s); font-weight: 500;
+}
+.chip[aria-pressed="true"] {
+  background: var(--primary-soft); border-color: var(--primary); color: var(--text);
+}
+.chip .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ---------- Ô nhập có nhãn nổi ---------- */
+.field { position: relative; }
+.field input, .field textarea {
+  width: 100%; min-height: 56px;
+  padding: 22px 14px 8px;
+  border: 1px solid var(--border); border-radius: var(--radius-s);
+  background: var(--surface); outline: none;
+  transition: border-color 0.15s;
+}
+.field textarea { resize: none; min-height: 72px; }
+.field label {
+  position: absolute; left: 15px; top: 17px;
+  color: var(--text-3); pointer-events: none;
+  transform-origin: left top;
+  transition: transform 0.15s var(--ease), color 0.15s;
+}
+.field input:focus, .field textarea:focus { border-color: var(--primary); border-width: 2px; padding-left: 13px; }
+.field input:focus + label, .field textarea:focus + label,
+.field input:not(:placeholder-shown) + label, .field textarea:not(:placeholder-shown) + label,
+.field.always-up label {
+  transform: translateY(-10px) scale(0.78);
+  color: var(--primary-strong);
+}
+
+/* ---------- Thông báo nhỏ (toast) ---------- */
+.toast {
+  position: fixed; left: 50%; z-index: 60;
+  bottom: calc(var(--nav-h) + var(--safe-b) + 16px);
+  transform: translate(-50%, 20px); opacity: 0;
+  display: flex; align-items: center; gap: 12px;
+  max-width: min(92vw, 420px);
+  padding: 12px 8px 12px 16px;
+  border-radius: var(--radius-s);
+  background: #1F2937; color: #F9FAFB;
+  box-shadow: var(--shadow-2);
+  font-size: var(--fs-s);
+  transition: transform 0.25s var(--ease), opacity 0.25s;
+  pointer-events: none;
+}
+.toast.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+.toast button { border: 0; background: none; color: #6EE7B7; font-weight: 700; padding: 6px 10px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

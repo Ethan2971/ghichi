@@ -106,6 +106,24 @@ await test('GC-LUU: dữ liệu trả về là bản sao, sửa ngoài không �
   assert.notEqual((await luu.get('khoanChi', rows[0].id)).soTien, -1);
 });
 
+// ---- GC-THEME (phần JS dùng chung) ----
+const ui = await import('../js/ui.js');
+await test('GC-THEME: đọc và định dạng số tiền', () => {
+  assert.equal(ui.parseMoney('1.250.000'), 1250000);
+  assert.equal(ui.parseMoney(''), 0);
+  assert.equal(ui.fmtNumber(1250000).replace(/\D/g, ''), '1250000');
+});
+await test('GC-THEME: cộng tháng qua năm', () => {
+  assert.equal(ui.addMonths('2026-01', -1), '2025-12');
+  assert.equal(ui.addMonths('2026-12', 1), '2027-01');
+});
+await test('GC-THEME: nhãn ngày Hôm nay / Hôm qua', () => {
+  assert.ok(ui.dayLabel('2026-10-16', '2026-10-16').startsWith('Hôm nay'));
+  assert.ok(ui.dayLabel('2026-10-15', '2026-10-16').startsWith('Hôm qua'));
+  assert.equal(ui.dayLabel('2026-10-14', '2026-10-16'), 'Thứ Tư, 14/10');
+  assert.equal(ui.addDays('2026-03-01', -1), '2026-02-28');
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);

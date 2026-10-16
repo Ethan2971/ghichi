@@ -1,0 +1,51 @@
+/* GC-DS — Màn Danh sách. */
+
+.month-card { padding: 8px 8px 16px; margin-bottom: 8px; text-align: center; }
+.month-nav { display: flex; align-items: center; justify-content: space-between; }
+.month-nav h2 { font-size: var(--fs-m); font-weight: 600; color: var(--text-2); }
+.month-total { margin: 2px 0 6px; font-size: var(--fs-xl); font-weight: 800; letter-spacing: -0.01em; }
+.month-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; color: var(--text-3); font-size: var(--fs-s); }
+.month-stats b { color: var(--text-2); font-weight: 600; }
+
+.day-head {
+  position: sticky; top: var(--appbar-h); z-index: 5;
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 14px 4px 6px;
+  background: var(--bg);
+  font-size: var(--fs-s); font-weight: 600; color: var(--text-2);
+}
+
+.rows { list-style: none; margin: 0; padding: 0; overflow: hidden; }
+.rows li + li .row { border-top: 1px solid var(--border); }
+
+.row {
+  width: 100%;
+  display: flex; align-items: center; gap: 12px;
+  min-height: 64px; padding: 10px 14px;
+  border: 0; background: transparent; text-align: left;
+  transition: background-color 0.2s;
+}
+.row:hover { background: var(--surface-2); }
+.row-icon {
+  flex: none; width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c);
+}
+.row-icon .icon { font-size: 22px; }
+.row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.row-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-sub { color: var(--text-3); font-size: var(--fs-s); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-sub .icon.tiny { font-size: 14px; vertical-align: -2px; margin-right: 2px; }
+.row-amount { flex: none; font-weight: 700; }
+
+/* Khoản vừa thêm / sửa: tô sáng rồi mờ dần */
+.row.moi { animation: row-moi 2.2s var(--ease); }
+@keyframes row-moi {
+  0%, 35% { background: var(--highlight); box-shadow: inset 4px 0 0 var(--primary); }
+  100% { background: transparent; box-shadow: inset 0 0 0 transparent; }
+}
+
+.empty { text-align: center; padding: 48px 24px; color: var(--text-2); }
+.empty .icon { font-size: 52px; color: var(--text-3); }
+.empty h2 { font-size: var(--fs-l); margin: 12px 0 6px; color: var(--text); }
+.empty p { margin: 0; }

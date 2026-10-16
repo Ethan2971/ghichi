@@ -1,0 +1,56 @@
+/* GC-NAV — Thanh tiêu đề trên cùng và thanh 3 tab dưới đáy. */
+
+.appbar {
+  position: sticky; top: 0; z-index: 20;
+  height: var(--appbar-h);
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 16px;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.appbar h1 { font-size: var(--fs-l); font-weight: 700; flex: 1; }
+.appbar .brand { color: var(--primary-strong); font-weight: 800; font-size: var(--fs-s); letter-spacing: 0.02em; }
+
+main {
+  max-width: 640px; margin: 0 auto;
+  padding: 4px 16px calc(var(--nav-h) + var(--safe-b) + 96px);
+}
+
+.bottom-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  height: calc(var(--nav-h) + var(--safe-b));
+  padding-bottom: var(--safe-b);
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.bottom-nav button {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: 0; background: none; color: var(--text-3);
+  font-size: var(--fs-xs); font-weight: 500;
+}
+.bottom-nav .pill {
+  display: grid; place-items: center;
+  width: 60px; height: 30px; border-radius: 999px;
+  transition: background-color 0.2s var(--ease);
+}
+.bottom-nav button[aria-current="page"] { color: var(--text); font-weight: 700; }
+.bottom-nav button[aria-current="page"] .pill { background: var(--primary-soft); color: var(--primary-strong); }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bottom-nav button[aria-current="page"] .pill { color: var(--primary); }
+}
+:root[data-theme="dark"] .bottom-nav button[aria-current="page"] .pill { color: var(--primary); }
+
+/* Màn hình rộng (máy tính bảng, máy tính): thanh tab gọn ở giữa. */
+@media (min-width: 720px) {
+  .bottom-nav { left: 50%; right: auto; width: 480px; transform: translateX(-50%);
+    border: 1px solid var(--border); border-bottom: 0; border-radius: var(--radius-l) var(--radius-l) 0 0; }
+}
+
+/* Trang tạm cho tab chưa làm */
+.placeholder { text-align: center; padding: 48px 24px; color: var(--text-2); }
+.placeholder .icon { font-size: 48px; color: var(--text-3); }
+.placeholder h2 { font-size: var(--fs-l); margin: 12px 0 6px; color: var(--text); }
