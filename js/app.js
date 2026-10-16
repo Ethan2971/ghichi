@@ -14,6 +14,14 @@ import { initCaiDat } from './screen-caidat.js';
 import { needsWelcome, runWelcome } from './welcome.js';
 import { applyTheme, esc, toast } from './ui.js';
 
+function openFromUrl(href) {
+  const q = new URL(href).searchParams;
+  if (!q.has('them') && !q.has('homnay')) return;
+  history.replaceState(null, '', location.pathname + (q.has('homnay') ? '' : location.hash));
+  if (q.has('homnay')) showToday();
+  else if (!document.querySelector('dialog[open]')) openForm();
+}
+
 try {
   const demo = new URLSearchParams(location.search).has('demo');
   await luu.init({ demo });
@@ -23,23 +31,18 @@ try {
 
   initNav();
   await initDs(document.getElementById('tab-ds'), { reveal: () => showTab('ds', { replace: true }) });
+  // Vẽ xong Danh sách thì cho màn hình hiện ngay, các tab còn lại chuẩn bị sau.
+  await new Promise((r) => requestAnimationFrame(() => setTimeout(r)));
   await initTk(document.getElementById('tab-tk'));
   await initCaiDat(document.getElementById('tab-caidat'));
   initFab();
   initBudget();
   initBackupReminder();
   initPwa();
-  // Lối tắt "Thêm khoản chi" trên biểu tượng app (manifest): mở thẳng bảng nhập.
-  const q = new URLSearchParams(location.search);
-  if (q.has('them')) {
-    history.replaceState(null, '', location.pathname + location.hash);
-    openForm();
-  }
-  // Nút "Xem hôm nay" trên thông báo khi app chưa mở (sw.js mở /?homnay).
-  if (q.has('homnay')) {
-    history.replaceState(null, '', location.pathname);
-    showToday();
-  }
+  // Lối tắt trên biểu tượng app và nút trên thông báo khi app chưa mở: /?them mở bảng nhập, /?homnay mở Danh sách hôm nay.
+  openFromUrl(location.href);
+  // App đã mở sẵn mà được gọi lại (manifest launch_handler focus-existing): đường dẫn mới đến qua launchQueue.
+  window.launchQueue?.setConsumer((params) => { if (params.targetURL) openFromUrl(params.targetURL); });
 
   const mode = luu.storageMode();
   if (mode === 'memory') toast('Máy này không cho lưu dữ liệu (có thể do chế độ ẩn danh). Tải lại trang sẽ mất.', { ms: 8000 });

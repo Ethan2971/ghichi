@@ -5,7 +5,7 @@
 // Bản mới không tự thay ngay: app hỏi "Có bản mới" (js/pwa.js) rồi mới chuyển, để không mất dữ liệu đang nhập.
 // VERSION phải trùng APP_VERSION trong js/version.js (kiểm tra tự động sẽ báo nếu lệch).
 
-const VERSION = '1.0.0-dev.3';
+const VERSION = '1.0.0-dev.4';
 const APP_CACHE = `ghichi-app-${VERSION}`;
 const FONT_CACHE = 'ghichi-fonts';
 const APP_FILES = [
@@ -90,7 +90,7 @@ self.addEventListener('notificationclick', (e) => {
     const win = mine.find((c, i) => flags[i]);
     if (win) {
       await win.focus();
-      win.postMessage(xem ? 'mo-ds' : 'mo-them');
+      win.postMessage({ lenh: xem ? 'mo-ds' : 'mo-them', luc: Date.now() });
     } else {
       await self.clients.openWindow(xem ? '/?homnay' : '/?them');
     }

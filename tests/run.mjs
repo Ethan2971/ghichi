@@ -319,6 +319,9 @@ await test('GC-PWA: sw.js cùng phiên bản app, tải sẵn đủ mọi file, 
   assert.equal(man.name, 'GhiChi');
   assert.ok(fs.existsSync(new URL('../icons/badge-96.png', import.meta.url)) && sw.includes("'/icons/badge-96.png'"), 'thiếu biểu tượng nhỏ cho thanh thông báo');
   assert.ok(sw.includes("'notificationclick'"), 'sw.js phải xử lý bấm vào thông báo');
+  for (const f of fs.readdirSync(new URL('../js/', import.meta.url))) {
+    assert.ok(html.includes(`<link rel="modulepreload" href="js/${f}">`), `index.html thiếu modulepreload js/${f}`);
+  }
 });
 
 for (const [s, n] of results) console.log(s + n);

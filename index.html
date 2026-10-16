@@ -15,7 +15,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap">
+  <!-- Chữ Be Vietnam Pro tải ngầm, không bắt màn hình chờ; chưa tải xong thì tạm dùng chữ hệ thống. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400..600,0..1,0&display=block">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/nav.css">
@@ -30,11 +31,42 @@
   <link rel="stylesheet" href="css/backup.css">
   <link rel="stylesheet" href="css/welcome.css">
   <link rel="stylesheet" href="css/pwa.css">
+  <!-- GC-PWA: tải song song mọi file JS ngay từ đầu thay vì lần lượt theo import. -->
+  <link rel="modulepreload" href="js/app.js">
+  <link rel="modulepreload" href="js/backup.js">
+  <link rel="modulepreload" href="js/budget.js">
+  <link rel="modulepreload" href="js/calc.js">
+  <link rel="modulepreload" href="js/data.js">
+  <link rel="modulepreload" href="js/fab.js">
+  <link rel="modulepreload" href="js/form.js">
+  <link rel="modulepreload" href="js/merge.js">
+  <link rel="modulepreload" href="js/nav.js">
+  <link rel="modulepreload" href="js/period.js">
+  <link rel="modulepreload" href="js/picker.js">
+  <link rel="modulepreload" href="js/pwa.js">
+  <link rel="modulepreload" href="js/screen-caidat.js">
+  <link rel="modulepreload" href="js/screen-ds.js">
+  <link rel="modulepreload" href="js/screen-tk.js">
+  <link rel="modulepreload" href="js/storage.js">
+  <link rel="modulepreload" href="js/ui.js">
+  <link rel="modulepreload" href="js/version.js">
+  <link rel="modulepreload" href="js/welcome.js">
+  <style>
+    /* GC-PWA: khung chờ giống tab Danh sách, hiện ngay lúc mở app rồi được thay bằng nội dung thật. */
+    .skel { border-radius: 20px; background: var(--surface, #fff); padding: 16px; margin: 0 0 12px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+    .skel i { display: block; height: 14px; border-radius: 8px; background: var(--surface-2, #EEF0F3); margin: 10px auto; }
+    .skel .chips { display: flex; gap: 8px; } .skel .chips i { flex: 1; height: 32px; margin: 0; border-radius: 16px; }
+  </style>
 </head>
 <body>
   <main>
     <section id="tab-ds" aria-label="Danh sách">
-      <p class="muted">Đang tải...</p>
+      <div class="skel" aria-hidden="true">
+        <div class="chips"><i></i><i></i><i></i><i></i><i></i></div>
+        <i style="width:55%;margin-top:18px"></i>
+        <i style="width:40%;height:30px"></i>
+      </div>
+      <div class="skel" aria-hidden="true"><i style="width:90%"></i><i style="width:80%"></i><i style="width:85%"></i></div>
     </section>
 
     <section id="tab-tk" aria-label="Báo cáo" hidden></section>
@@ -42,7 +74,11 @@
     <section id="tab-caidat" aria-label="Cài đặt" hidden></section>
   </main>
 
-  <nav class="bottom-nav" aria-label="Các tab"></nav>
+  <nav class="bottom-nav" aria-label="Các tab">
+    <button type="button" data-tab="ds" aria-current="page"><span class="pill"><span class="icon fill" aria-hidden="true">receipt_long</span></span><span class="label">Danh sách</span></button>
+    <button type="button" data-tab="tk" aria-current="false"><span class="pill"><span class="icon" aria-hidden="true">bar_chart</span></span><span class="label">Báo cáo</span></button>
+    <button type="button" data-tab="caidat" aria-current="false"><span class="pill"><span class="icon" aria-hidden="true">settings</span></span><span class="label">Cài đặt</span></button>
+  </nav>
 
   <noscript>GhiChi cần bật JavaScript.</noscript>
   <script type="module" src="js/app.js"></script>

@@ -421,6 +421,8 @@ export async function openForm({ id } = {}) {
 let closeResolver = null;
 
 // Đóng bảng. Trả về promise xong khi lịch sử trình duyệt đã quay lại đúng chỗ.
+// closeForm dùng cho nơi khác cần đóng bảng (nút Xem hôm nay trên thông báo, GC-PWA).
+export const closeForm = () => close();
 function close() {
   if (!dialog?.open) return Promise.resolve();
   return new Promise((resolve) => {

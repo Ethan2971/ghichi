@@ -6,7 +6,7 @@
 import * as luu from './storage.js';
 import { toDateStr, todayStr } from './data.js';
 import { setPeriod } from './period.js';
-import { openForm } from './form.js';
+import { openForm, closeForm } from './form.js';
 import { esc, icon, toast, fmtMoney } from './ui.js';
 import { APP_VERSION } from './version.js';
 
@@ -36,8 +36,11 @@ export async function initPwa() {
   navigator.serviceWorker.addEventListener('message', (e) => {
     // sw.js hỏi cửa sổ này có phải app đã cài không, để mở đúng app chứ không mở trình duyệt.
     if (e.data === 'hoi-kieu') e.ports[0]?.postMessage(isStandalone());
-    if (e.data === 'mo-them' && !document.querySelector('dialog[open]')) openForm();
-    if (e.data === 'mo-ds') showToday();
+    // Lệnh kèm giờ gửi: app bị điện thoại tạm dừng sẽ nhận lệnh cũ khi mở lại, lệnh quá 5 giây thì bỏ.
+    const { lenh, luc } = e.data ?? {};
+    if (!lenh || Date.now() - luc > 5000) return;
+    if (lenh === 'mo-ds') showToday();
+    if (lenh === 'mo-them' && !document.querySelector('dialog[open]')) openForm();
   });
   try {
     reg = await navigator.serviceWorker.register('/sw.js');
@@ -73,7 +76,10 @@ export async function initPwa() {
 }
 
 // "Xem hôm nay": Danh sách và Báo cáo dùng chung kỳ (period.js), đặt kỳ về Hôm nay là cả hai tab cùng đổi.
-export function showToday() {
+export async function showToday() {
+  // Đang mở bảng nhập hay bảng nào khác thì đóng lại, vào thẳng Danh sách hôm nay.
+  await closeForm();
+  for (const d of document.querySelectorAll('dialog[open]')) d.close();
   setPeriod({ type: 'day', anchor: todayStr() });
   location.hash = 'ds';
   scrollTo(0, 0);
