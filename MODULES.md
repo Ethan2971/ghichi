@@ -27,7 +27,7 @@ Nếu không chắc phần đó thuộc mã nào, cứ mô tả điều thấy t
 | GC-NAV | Thanh 3 tab dưới đáy, khung trang, thứ tự khởi động app, trang chờ của Báo cáo và Cài đặt | js/nav.js, js/app.js, css/nav.css, index.html | Riêng |
 | GC-THEME | Màu sắc, chữ, chế độ tối, nút, chip, ô nhập, thông báo nhỏ, định dạng tiền và ngày | css/theme.css, js/ui.js | Dùng chung |
 | GC-DATA | Cấu trúc dữ liệu, danh mục mặc định, quy tắc ai được sửa, kiểm tra hợp lệ | js/data.js | Dùng chung |
-| GC-LUU | Nơi duy nhất đọc ghi dữ liệu (hiện là dữ liệu giả) | js/storage.js | Dùng chung |
+| GC-LUU | Nơi duy nhất đọc ghi dữ liệu, lưu thật trên máy (IndexedDB) | js/storage.js | Dùng chung |
 | GC-DEPLOY | Số phiên bản, cấu hình Vercel | js/version.js, vercel.json | Riêng |
 
 **Riêng**: sửa không ảnh hưởng phần khác.

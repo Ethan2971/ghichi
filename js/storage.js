@@ -1,7 +1,8 @@
 // GC-LUU — Nơi duy nhất đọc ghi dữ liệu.
-// Lượt 1 (v0.1): dữ liệu giả nằm trong bộ nhớ, tải lại trang là về như cũ.
-// Lượt 2 (v0.5): đổi phần bên trong sang IndexedDB, giữ nguyên các hàm bên dưới
-// để màn hình không phải sửa.
+// Lượt 2 (v0.5): lưu thật vào IndexedDB trên máy. Dữ liệu được nạp hết vào bộ nhớ lúc mở app
+// để đọc nhanh; mỗi lần ghi, bản ghi được lưu xuống IndexedDB xong rồi mới báo cho màn hình.
+// Chế độ xem thử (?demo trên địa chỉ, hoặc init({ demo: true })) dùng dữ liệu giả trong bộ nhớ,
+// không đụng tới dữ liệu thật. Máy không cho dùng IndexedDB thì tạm lưu trong bộ nhớ.
 //
 // Màn hình chỉ dùng các hàm export ở đây và nghe sự kiện "dulieu-doi":
 //   store.addEventListener('dulieu-doi', (e) => e.detail) // { table, id, action }
@@ -13,8 +14,15 @@ import {
 
 export const store = new EventTarget();
 
-let db = null;
-let settings = null; // Cài đặt máy: chỉ trên máy này, không đi theo file.
+const DB_NAME = 'ghichi';
+const DB_VERSION = 1;
+const SETTINGS_STORE = 'caiDat'; // Cài đặt máy: chỉ trên máy này, không đi theo file.
+const SETTINGS_KEY = 'may';
+
+let db = null;        // bản sao trong bộ nhớ của mọi bảng
+let settings = null;
+let idb = null;       // kết nối IndexedDB, null nếu đang xem thử hoặc máy không cho lưu
+let mode = 'memory';  // 'idb' | 'demo' | 'memory'
 
 const clone = (x) => structuredClone(x);
 
@@ -26,13 +34,113 @@ function assertTable(table) {
   if (!TABLES.includes(table)) throw new Error(`Bảng không tồn tại: ${table}`);
 }
 
+// ---------- IndexedDB ----------
+
+const req = (r) => new Promise((resolve, reject) => {
+  r.onsuccess = () => resolve(r.result);
+  r.onerror = () => reject(r.error);
+});
+
+const done = (tx) => new Promise((resolve, reject) => {
+  tx.oncomplete = () => resolve();
+  tx.onerror = () => reject(tx.error);
+  tx.onabort = () => reject(tx.error ?? new Error('Ghi dữ liệu bị huỷ'));
+});
+
+function openIdb() {
+  return new Promise((resolve, reject) => {
+    const r = indexedDB.open(DB_NAME, DB_VERSION);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      for (const t of TABLES) if (!d.objectStoreNames.contains(t)) d.createObjectStore(t, { keyPath: 'id' });
+      if (!d.objectStoreNames.contains(SETTINGS_STORE)) d.createObjectStore(SETTINGS_STORE);
+    };
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.onblocked = () => reject(new Error('Hãy đóng các tab GhiChi khác rồi mở lại'));
+  });
+}
+
+async function loadAll() {
+  const tx = idb.transaction([...TABLES, SETTINGS_STORE], 'readonly');
+  const out = { schemaVersion: emptyDb().schemaVersion };
+  for (const t of TABLES) out[t] = await req(tx.objectStore(t).getAll());
+  const s = await req(tx.objectStore(SETTINGS_STORE).get(SETTINGS_KEY));
+  return { data: out, settings: s ?? null };
+}
+
+// Lưu nhiều bản ghi trong một lần (tất cả cùng thành công hoặc cùng không).
+async function persist(items, newSettings) {
+  if (!idb || (!items.length && !newSettings)) return;
+  const stores = [...new Set(items.map(([t]) => t)), ...(newSettings ? [SETTINGS_STORE] : [])];
+  const tx = idb.transaction(stores, 'readwrite');
+  for (const [t, r] of items) tx.objectStore(t).put(r);
+  if (newSettings) tx.objectStore(SETTINGS_STORE).put(newSettings, SETTINGS_KEY);
+  await done(tx);
+}
+
+// Sổ trống cho lần đầu mở app: danh mục mặc định, 3 thành viên, máy này là sổ chính.
+// Màn chào (GC-CHAO) sẽ cho đặt lại tên máy và thành viên.
+function buildFirstRun() {
+  const data = emptyDb();
+  const bo = createMember({ ten: 'Bố', mau: '#3B82F6' }, null);
+  const me = createMember({ ten: 'Mẹ', mau: '#EC4899' }, null);
+  const con = createMember({ ten: 'Con', mau: '#10B981' }, null);
+  const may = createDevice({ ten: 'Máy này', chuMayId: bo.id, laSoChinh: true });
+  for (const m of [bo, me, con]) m.mayTaoId = may.id;
+  data.thanhVien.push(bo, me, con);
+  data.thietBi.push(may);
+  return { db: data, settings: { deviceId: may.id, theme: 'auto', lanSaoLuuCuoi: null, taoLuc: nowIso() } };
+}
+
 // ---------- Khởi động ----------
 
-export async function init({ seed = 20261016 } = {}) {
-  const fake = buildFakeData(seed);
-  db = fake.db;
-  settings = fake.settings;
+export async function init({ demo = false, seed = 20261016 } = {}) {
+  idb?.close();
+  idb = null;
+  if (demo) {
+    const fake = buildFakeData(seed);
+    db = fake.db;
+    settings = fake.settings;
+    mode = demo ? 'demo' : 'memory';
+    emit('*', null, 'init');
+    return;
+  }
+  try {
+    if (typeof indexedDB === 'undefined') throw new Error('Trình duyệt không có IndexedDB');
+    idb = await openIdb();
+    const loaded = await loadAll();
+    if (loaded.settings && loaded.data.thietBi.some((d) => d.id === loaded.settings.deviceId)) {
+      db = loaded.data;
+      settings = loaded.settings;
+      // Danh mục mặc định mới thêm ở bản sau: bổ sung nếu máy chưa có.
+      const missing = emptyDb().danhMuc.filter((c) => !db.danhMuc.some((x) => x.id === c.id));
+      if (missing.length) {
+        db.danhMuc.push(...missing);
+        await persist(missing.map((c) => ['danhMuc', c]));
+      }
+    } else {
+      const first = buildFirstRun();
+      await persist(TABLES.flatMap((t) => first.db[t].map((r) => [t, r])), first.settings);
+      db = first.db;
+      settings = first.settings;
+    }
+    mode = 'idb';
+    navigator.storage?.persist?.().catch(() => {}); // xin trình duyệt đừng tự xoá dữ liệu
+  } catch (err) {
+    console.error('Không mở được IndexedDB, tạm lưu trong bộ nhớ', err);
+    idb = null;
+    const first = buildFirstRun();
+    db = first.db;
+    settings = first.settings;
+    mode = 'memory';
+  }
   emit('*', null, 'init');
+}
+
+// 'idb': lưu thật trên máy. 'demo': dữ liệu giả để xem thử. 'memory': máy không cho lưu, tải lại sẽ mất.
+export function storageMode() {
+  return mode;
 }
 
 // ---------- Đọc ----------
@@ -52,6 +160,15 @@ export async function get(table, id) {
 
 export async function getSettings() {
   return clone(settings);
+}
+
+// Đổi cài đặt máy, ví dụ setSettings({ theme: 'dark' }).
+export async function setSettings(patch) {
+  const next = { ...settings, ...patch };
+  await persist([], next);
+  settings = next;
+  emit('caiDat', null, 'sua');
+  return clone(next);
 }
 
 // Thiết bị đang dùng (máy này).
@@ -82,6 +199,7 @@ async function write(table, record, action) {
   const errors = [...validate(table, next), ...validateRefs(table, next, db)];
   if (errors.length) throw new Error(errors.join('; '));
 
+  await persist([[table, next]]);
   if (existing) {
     db[table] = db[table].map((x) => (x.id === next.id ? next : x));
   } else {
@@ -107,7 +225,7 @@ export async function restore(table, id) {
   return write(table, back, 'hoantac');
 }
 
-// ---------- Dữ liệu giả cho v0.1 ----------
+// ---------- Dữ liệu giả cho chế độ xem thử ----------
 // Sinh cố định theo seed: mỗi lần mở đều ra cùng một bộ dữ liệu, tiện duyệt giao diện.
 
 function rng(seed) {

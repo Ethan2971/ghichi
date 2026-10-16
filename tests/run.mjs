@@ -53,7 +53,7 @@ await test('GC-DATA: quyền sửa theo quy tắc', () => {
 });
 
 // ---- GC-LUU ----
-await luu.init();
+await luu.init({ demo: true });
 const events = [];
 luu.store.addEventListener('dulieu-doi', (e) => events.push(e.detail));
 
@@ -65,7 +65,7 @@ await test('GC-LUU: dữ liệu giả có đủ bảng và liên kết đúng', 
 });
 await test('GC-LUU: dữ liệu giả giống nhau mỗi lần mở', async () => {
   const a = (await luu.list('khoanChi')).map((k) => k.soTien).join();
-  await luu.init();
+  await luu.init({ demo: true });
   const b = (await luu.list('khoanChi')).map((k) => k.soTien).join();
   assert.equal(a, b);
 });

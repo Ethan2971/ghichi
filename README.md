@@ -24,7 +24,7 @@ Cách gọi mã để sửa từng phần: xem [MODULES.md](MODULES.md).
 | Mã | File | Trạng thái |
 | --- | --- | --- |
 | GC-DATA | js/data.js | Xong (v0.1) |
-| GC-LUU | js/storage.js | Lượt 1: dữ liệu giả |
+| GC-LUU | js/storage.js | Xong lượt 2 (v0.5): lưu IndexedDB; thêm ?demo để xem thử dữ liệu giả |
 | GC-DEPLOY | vercel.json, js/version.js | Xong (v0.1) |
 | GC-THEME | css/theme.css, js/ui.js | Xong (v0.1) |
 | GC-NAV | js/nav.js, css/nav.css, js/app.js, index.html | Xong (v0.1) |
