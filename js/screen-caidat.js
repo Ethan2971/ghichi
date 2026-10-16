@@ -1,4 +1,4 @@
-// GC-CAIDAT — Tab Cài đặt: máy này, giao diện sáng tối, danh mục, thành viên, chỗ cho nhóm Hạn mức (GC-HANMUC), Gộp dữ liệu (GC-GOP) và Sao lưu (GC-SAOLUU), thông tin app.
+// GC-CAIDAT — Tab Cài đặt: máy này, giao diện sáng tối, danh mục, thành viên, chỗ cho nhóm Hạn mức (GC-HANMUC), Gộp dữ liệu (GC-GOP), Sao lưu (GC-SAOLUU) và Ứng dụng (GC-PWA), thông tin app.
 // Xoá danh mục hoặc thành viên = ẩn đi (khoản chi cũ vẫn giữ, hiện kèm "(đã ẩn)"), có thể hiện lại.
 // Đọc ghi qua GC-LUU; các màn hình khác tự cập nhật nhờ sự kiện 'dulieu-doi'.
 
@@ -9,6 +9,7 @@ import { APP_VERSION } from './version.js';
 import { mountBackup } from './backup.js';
 import { mountBudget } from './budget.js';
 import { mountMerge } from './merge.js';
+import { mountInstall } from './pwa.js';
 
 const ICONS = [
   'restaurant', 'shopping_cart', 'bolt', 'local_gas_station', 'school', 'medical_services',
@@ -103,8 +104,14 @@ async function render() {
         <div class="bk"></div>
       </section>
 
+      <section class="cd-group">
+        <h3>Ứng dụng</h3>
+        <div class="pwa"></div>
+      </section>
+
       <p class="cd-about muted">GhiChi ${esc(APP_VERSION)} · ${esc(MODE_NOTE[luu.storageMode()])}</p>
     </div>`;
+  mountInstall(root.querySelector('.pwa'));
   await Promise.all([
     mountBudget(root.querySelector('.hm')), mountMerge(root.querySelector('.gop')), mountBackup(root.querySelector('.bk')),
   ]);

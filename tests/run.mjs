@@ -300,6 +300,24 @@ await test('GC-SAOLUU: nhắc sao lưu khi quá hạn và có khoản mới, ho�
   assert.deepEqual(backupReminder({ lanSaoLuuCuoi: null, taoLuc: '2026-09-30T08:00:00+07:00' }, rows, now), { days: 16, changes: 2, never: true });
 });
 
+await test('GC-PWA: sw.js cùng phiên bản app, tải sẵn đủ mọi file, manifest có biểu tượng thật', async () => {
+  const fs = await import('node:fs');
+  const { APP_VERSION } = await import('../js/version.js');
+  const sw = fs.readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
+  assert.equal(sw.match(/const VERSION = '([^']+)'/)[1], APP_VERSION, 'Đổi VERSION trong sw.js cho trùng js/version.js');
+  for (const dir of ['js', 'css']) {
+    for (const f of fs.readdirSync(new URL(`../${dir}/`, import.meta.url))) {
+      assert.ok(sw.includes(`'/${dir}/${f}'`), `sw.js thiếu /${dir}/${f}`);
+    }
+  }
+  const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  for (const [, href] of html.matchAll(/href="(css\/[^"]+)"/g)) assert.ok(sw.includes(`'/${href}'`), `sw.js thiếu /${href}`);
+  const man = JSON.parse(fs.readFileSync(new URL('../manifest.webmanifest', import.meta.url), 'utf8'));
+  assert.equal(man.display, 'standalone');
+  for (const ic of man.icons) assert.ok(fs.existsSync(new URL(`..${ic.src}`, import.meta.url)), ic.src);
+  assert.ok(man.icons.some((i) => i.purpose === 'maskable'));
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);

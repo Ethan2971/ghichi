@@ -8,6 +8,8 @@ import { initDs } from './screen-ds.js';
 import { initTk } from './screen-tk.js';
 import { initBudget } from './budget.js';
 import { initBackupReminder } from './backup.js';
+import { initPwa } from './pwa.js';
+import { openForm } from './form.js';
 import { initCaiDat } from './screen-caidat.js';
 import { needsWelcome, runWelcome } from './welcome.js';
 import { applyTheme, esc, toast } from './ui.js';
@@ -26,6 +28,12 @@ try {
   initFab();
   initBudget();
   initBackupReminder();
+  initPwa();
+  // Lối tắt "Thêm khoản chi" trên biểu tượng app (manifest): mở thẳng bảng nhập.
+  if (new URLSearchParams(location.search).has('them')) {
+    history.replaceState(null, '', location.pathname + location.hash);
+    openForm();
+  }
 
   const mode = luu.storageMode();
   if (mode === 'memory') toast('Máy này không cho lưu dữ liệu (có thể do chế độ ẩn danh). Tải lại trang sẽ mất.', { ms: 8000 });

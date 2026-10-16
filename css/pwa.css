@@ -1,0 +1,22 @@
+/* GC-PWA — Dải "Có bản mới" và nhóm Ứng dụng trong Cài đặt. */
+
+.pwa-ic { --c: var(--primary-strong); }
+.pwa-new .cd-main { color: var(--primary-strong); }
+
+.pwa-bar {
+  position: fixed; z-index: 46; left: 12px; right: 12px;
+  bottom: calc(var(--nav-h) + 92px + var(--safe-b)); /* nằm trên nút + */
+  max-width: 560px; margin: 0 auto;
+  display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 12px;
+  border-radius: var(--radius-m); background: var(--text); color: var(--bg);
+  box-shadow: var(--shadow-2);
+  animation: pwa-up 0.3s var(--ease);
+}
+@keyframes pwa-up { from { transform: translateY(120%); opacity: 0; } }
+.pwa-bar-ic { flex: none; color: var(--primary); }
+.pwa-bar-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.pwa-bar-text b { font-size: var(--fs-s); }
+.pwa-bar-text small { font-size: var(--fs-xs); opacity: 0.75; }
+.pwa-bar-later { flex: none; border: 0; background: none; padding: 6px; color: inherit; opacity: 0.8; font-size: var(--fs-s); font-weight: 600; }
+.pwa-bar-go { flex: none; min-height: 38px; padding: 0 16px; font-size: var(--fs-s); }
+body.chao-open .pwa-bar { display: none; }

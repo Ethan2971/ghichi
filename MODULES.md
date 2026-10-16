@@ -29,11 +29,12 @@ Nếu không chắc phần đó thuộc mã nào, cứ mô tả điều thấy t
 | GC-DS | Tab Danh sách: chip kỳ Hôm nay, Hôm qua, Tuần, Tháng, Năm và mũi tên chuyển kỳ, lọc theo người chi và danh mục, khung kỳ ghim trên cùng, nhóm theo ngày, vuốt dòng để Sửa, Xoá, tô sáng khoản vừa lưu | js/screen-ds.js, js/period.js, css/ds.css, css/period.css | Riêng (period dùng chung với GC-TK) |
 | GC-TK | Tab Báo cáo: tổng chi theo kỳ, so với kỳ trước, diễn biến theo ngày hoặc tháng, theo danh mục, theo người chi | js/screen-tk.js, css/tk.css | Riêng |
 | GC-FAB | Nút + đỏ nổi trên mọi tab | js/fab.js, css/fab.css | Riêng |
-| GC-CAIDAT | Tab Cài đặt: tên máy, người dùng máy này, sáng tối, thêm sửa ẩn danh mục và thành viên (nhóm Hạn mức bên trong là GC-HANMUC, Gộp dữ liệu là GC-GOP, Sao lưu là GC-SAOLUU) | js/screen-caidat.js, css/caidat.css | Riêng |
+| GC-CAIDAT | Tab Cài đặt: tên máy, người dùng máy này, sáng tối, thêm sửa ẩn danh mục và thành viên (nhóm Hạn mức bên trong là GC-HANMUC, Gộp dữ liệu là GC-GOP, Sao lưu là GC-SAOLUU, Ứng dụng là GC-PWA) | js/screen-caidat.js, css/caidat.css | Riêng |
 | GC-CHAO | Màn chào lần đầu mở app: máy đầu tiên (sổ chính) hoặc nạp file từ sổ chính, đặt tên máy, chọn bạn là ai | js/welcome.js, css/welcome.css | Riêng |
 | GC-HANMUC | Hạn mức tháng cho từng danh mục: nhóm Hạn mức trong Cài đặt, bảng đặt hạn mức, thanh hạn mức ở Báo cáo, nhắc khi chạm 80% và khi vượt | js/budget.js, css/budget.css | Riêng |
 | GC-GOP | Nhóm Gộp dữ liệu cả nhà trong Cài đặt: sổ chính gộp file của mọi người và gửi file tổng; máy thành viên gửi file và nhận file tổng; xem trước thêm, sửa, xoá; gộp lần cuối | js/merge.js, css/merge.css | Riêng |
 | GC-SAOLUU | Nhóm Sao lưu trong Cài đặt: tải file sao lưu, gửi file qua Zalo, khôi phục từ file, ngày sao lưu lần cuối, chọn nhịp nhắc; dải nhắc sao lưu trên cùng màn hình | js/backup.js, css/backup.css | Riêng |
+| GC-PWA | Cài lên màn hình chính, chạy khi mất mạng, biểu tượng app, lối tắt Thêm khoản chi, dải "Có bản mới", nhóm Ứng dụng trong Cài đặt | js/pwa.js, sw.js, manifest.webmanifest, icons/, css/pwa.css | Riêng |
 | GC-NAV | Thanh 3 tab dưới đáy, khung trang, thứ tự khởi động app | js/nav.js, js/app.js, css/nav.css, index.html | Riêng |
 | GC-THEME | Màu sắc, chữ, chế độ tối, nút, chip, ô nhập, thông báo nhỏ, định dạng tiền và ngày | css/theme.css, js/ui.js | Dùng chung |
 | GC-DATA | Cấu trúc dữ liệu, danh mục mặc định, quy tắc ai được sửa, kiểm tra hợp lệ | js/data.js | Dùng chung |
@@ -57,6 +58,7 @@ nào có thể bị ảnh hưởng và kiểm tra lại các phần đó sau khi
   - GC-CAIDAT chỉ chừa chỗ và gọi `mountBudget()` của GC-HANMUC, `mountMerge()` của GC-GOP, `mountBackup()` của GC-SAOLUU.
   - GC-GOP dùng `buildFile()`, `share()` của GC-SAOLUU để gửi file, và `replaceData()` của GC-LUU để ghi bản đã gộp.
   - GC-TK lấy số hạn mức qua `budgetForPeriod()` và mở bảng đặt hạn mức qua `openBudgetSheet()` của GC-HANMUC.
+- Mỗi lần sửa đều tăng số phiên bản ở `js/version.js` và `sw.js` (hai số phải trùng nhau, kiểm tra tự động sẽ báo nếu lệch), để điện thoại cả nhà nhận được bản mới.
 - Mỗi lần sửa đều chạy `node tests/run.mjs` và thử lại trên khung điện thoại trước khi đẩy lên.
 
 ## Quay lại bản cũ
