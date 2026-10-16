@@ -1,4 +1,4 @@
-// GC-CAIDAT — Tab Cài đặt: máy này, giao diện sáng tối, danh mục, thành viên, chỗ cho nhóm Hạn mức (GC-HANMUC) và Sao lưu (GC-SAOLUU), thông tin app.
+// GC-CAIDAT — Tab Cài đặt: máy này, giao diện sáng tối, danh mục, thành viên, chỗ cho nhóm Hạn mức (GC-HANMUC), Gộp dữ liệu (GC-GOP) và Sao lưu (GC-SAOLUU), thông tin app.
 // Xoá danh mục hoặc thành viên = ẩn đi (khoản chi cũ vẫn giữ, hiện kèm "(đã ẩn)"), có thể hiện lại.
 // Đọc ghi qua GC-LUU; các màn hình khác tự cập nhật nhờ sự kiện 'dulieu-doi'.
 
@@ -8,6 +8,7 @@ import { esc, icon, applyTheme, toast, monthLabel } from './ui.js';
 import { APP_VERSION } from './version.js';
 import { mountBackup } from './backup.js';
 import { mountBudget } from './budget.js';
+import { mountMerge } from './merge.js';
 
 const ICONS = [
   'restaurant', 'shopping_cart', 'bolt', 'local_gas_station', 'school', 'medical_services',
@@ -37,7 +38,7 @@ export function initCaiDat(el) {
   root = el;
   root.addEventListener('click', onClick);
   luu.store.addEventListener('dulieu-doi', (e) => {
-    if (['*', 'danhMuc', 'thanhVien', 'thietBi', 'caiDat', 'hanMuc', 'khoanChi'].includes(e.detail.table)) render();
+    if (['*', 'danhMuc', 'thanhVien', 'thietBi', 'caiDat', 'hanMuc', 'khoanChi', 'lichSuGop'].includes(e.detail.table)) render();
   });
   return render();
 }
@@ -93,13 +94,20 @@ async function render() {
       </section>
 
       <section class="cd-group">
+        <h3>Gộp dữ liệu cả nhà</h3>
+        <div class="gop"></div>
+      </section>
+
+      <section class="cd-group">
         <h3>Sao lưu</h3>
         <div class="bk"></div>
       </section>
 
       <p class="cd-about muted">GhiChi ${esc(APP_VERSION)} · ${esc(MODE_NOTE[luu.storageMode()])}</p>
     </div>`;
-  await Promise.all([mountBudget(root.querySelector('.hm')), mountBackup(root.querySelector('.bk'))]);
+  await Promise.all([
+    mountBudget(root.querySelector('.hm')), mountMerge(root.querySelector('.gop')), mountBackup(root.querySelector('.bk')),
+  ]);
 }
 
 function groupHtml(table, title, rows, device) {

@@ -238,6 +238,30 @@ export async function restoreBackup(data) {
   emit('*', null, 'init');
 }
 
+// Gộp dữ liệu (GC-GOP): thay toàn bộ các bảng bằng bản đã gộp, trong một lần ghi.
+// Kiểm tra hợp lệ và liên kết của mọi bản ghi trước; có lỗi thì không ghi gì.
+export async function replaceData(next) {
+  const data = emptyDb();
+  for (const t of TABLES) data[t] = clone(next[t] ?? []);
+  for (const t of TABLES) {
+    for (const r of data[t]) {
+      const errs = [...validate(t, r), ...validateRefs(t, r, data)];
+      if (errs.length) throw new Error(`Dữ liệu gộp bị lỗi: ${errs[0]}`);
+    }
+  }
+  if (!data.thietBi.some((d) => d.id === settings.deviceId)) throw new Error('Dữ liệu gộp thiếu máy này');
+  if (idb) {
+    const tx = idb.transaction(TABLES, 'readwrite');
+    for (const t of TABLES) {
+      tx.objectStore(t).clear();
+      for (const r of data[t]) tx.objectStore(t).put(r);
+    }
+    await done(tx);
+  }
+  db = data;
+  emit('*', null, 'gop');
+}
+
 // 'idb': lưu thật trên máy. 'demo': dữ liệu giả để xem thử. 'memory': máy không cho lưu, tải lại sẽ mất.
 export function storageMode() {
   return mode;

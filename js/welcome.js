@@ -140,7 +140,7 @@ function thanhVienHtml() {
     ${header('Nhà đã có sổ chính')}
     <section class="chao-sec">
       <h3>1. Nạp file gia đình</h3>
-      <p class="chao-help">Nhờ người giữ sổ chính vào <b>Cài đặt → Sao lưu</b>, gửi file GhiChi cho bạn qua Zalo. Lưu file về máy rồi chọn ở đây.</p>
+      <p class="chao-help">Nhờ người giữ sổ chính vào <b>Cài đặt → Gộp dữ liệu cả nhà</b>, gửi file tổng cho bạn qua Zalo. Lưu file về máy rồi chọn ở đây.</p>
       <label class="chao-file ${f ? 'ok' : ''}">
         <input type="file" accept=".json,application/json" data-file hidden>
         ${f ? `${icon('check_circle', 'fill')}

@@ -33,6 +33,7 @@ Cách gọi mã để sửa từng phần: xem [MODULES.md](MODULES.md).
 | GC-DS | js/screen-ds.js, css/ds.css | Xong (v0.5): kỳ Hôm nay, Hôm qua, Tuần, Tháng, Năm; lọc; vuốt Sửa, Xoá |
 | GC-TK | js/screen-tk.js, css/tk.css | Xong (v0.5), thêm thanh hạn mức (v0.8) |
 | GC-HANMUC | js/budget.js, css/budget.css | Xong (v0.8) |
+| GC-GOP | js/merge.js, css/merge.css | Xong (v0.8) |
 | GC-CAIDAT | js/screen-caidat.js, css/caidat.css | Xong (v0.5) |
 | GC-CHAO | js/welcome.js, css/welcome.css | Xong (v0.5) |
 | GC-SAOLUU | js/backup.js, css/backup.css | Lượt 1 xong (v0.5): tải, gửi, khôi phục file JSON. v0.8: nhắc sao lưu |

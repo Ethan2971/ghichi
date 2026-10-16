@@ -249,6 +249,43 @@ await test('GC-HANMUC: kế thừa tháng trước, 0 là bỏ, cộng cả năm
   assert.deepEqual([budgetLevel(70, 100), budgetLevel(80, 100), budgetLevel(100, 100), budgetLevel(5, 0)], ['', 'near', 'over', '']);
 });
 
+await test('GC-GOP: thêm, sửa, xoá theo máy ghi, không ghi đè khoản của máy này, gộp lặp không trùng', async () => {
+  const { planMerge } = await import('../js/merge.js');
+  await luu.init({ demo: true });
+  const main = await luu.exportData(); // sổ chính: may_bo
+  const meBo = main.thietBi.find((d) => d.id === 'may_bo');
+  const later = (r) => ({ ...r, suaLuc: '2099-01-01T00:00:00+07:00' });
+  const fileMe = structuredClone(main);
+  fileMe.tuMay = { id: 'may_me', ten: 'Điện thoại Mẹ', laSoChinh: false };
+  const meRows = fileMe.khoanChi.filter((k) => k.mayGhiId === 'may_me');
+  const boRow = fileMe.khoanChi.find((k) => k.mayGhiId === 'may_bo');
+  const moi = data.createExpense({ ngay: '2026-10-16', soTien: 77000, danhMucId: 'dm_an_uong', nguoiChiId: 'tv_me' }, 'may_me');
+  fileMe.khoanChi = fileMe.khoanChi.map((k) => {
+    if (k.id === meRows[0].id) return later({ ...k, soTien: k.soTien + 1000 });
+    if (k.id === meRows[1].id) return later({ ...k, daXoa: true });
+    if (k.id === boRow.id) return later({ ...k, soTien: 1 }); // máy khác sửa khoản của bố: bỏ qua
+    return k;
+  });
+  fileMe.khoanChi.push(moi);
+  fileMe.hanMuc = fileMe.hanMuc.map((h) => later({ ...h, soTien: 1 })); // sổ chính bỏ qua hạn mức trong file
+  const p1 = planMerge(main, [{ name: 'me.json', data: fileMe }], meBo);
+  assert.deepEqual(p1.total, { them: 1, sua: 1, xoa: 1 });
+  assert.equal(p1.db.khoanChi.find((k) => k.id === boRow.id).soTien, boRow.soTien);
+  assert.equal(p1.db.khoanChi.find((k) => k.id === meRows[1].id).daXoa, true);
+  assert.deepEqual(p1.db.hanMuc, main.hanMuc);
+  // gộp lại cùng file: không có gì mới
+  const p2 = planMerge(p1.db, [{ name: 'me.json', data: fileMe }], meBo);
+  assert.deepEqual(p2.total, { them: 0, sua: 0, xoa: 0 });
+  assert.equal(p2.db.khoanChi.length, p1.db.khoanChi.length);
+  // máy thành viên chỉ nhận file từ sổ chính; không gộp file của chính mình
+  const meMe = { id: 'may_me', laSoChinh: false };
+  assert.throws(() => planMerge(main, [{ name: 'x', data: { ...main, tuMay: { id: 'may_khac', laSoChinh: false } } }], meMe), /chỉ nhận file tổng/);
+  assert.throws(() => planMerge(main, [{ name: 'x', data: main }], meBo), /chính máy này/);
+  // ghi được vào kho
+  await luu.replaceData(p1.db);
+  assert.equal((await luu.list('khoanChi')).some((k) => k.id === moi.id), true);
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);

@@ -56,13 +56,13 @@ function slug(s) {
     .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'may';
 }
 
-function canShare() {
+export function canShare() {
   try {
     return !!navigator.canShare?.({ files: [new File(['{}'], 'x.json', { type: 'application/json' })] });
   } catch { return false; }
 }
 
-async function buildFile() {
+export async function buildFile() {
   const data = await luu.exportData();
   const day = toDateStr(new Date(data.xuatLuc));
   const name = `ghichi-${slug(data.tuMay.ten)}-${day}.json`;
@@ -94,7 +94,7 @@ export async function download(file) {
   toast(`Đã tải ${file.name}`);
 }
 
-async function share() {
+export async function share() {
   const file = await buildFile();
   await navigator.share({ files: [file], title: 'File GhiChi' });
   await luu.setSettings({ lanSaoLuuCuoi: new Date().toISOString() });
