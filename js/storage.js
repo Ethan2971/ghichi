@@ -83,9 +83,9 @@ async function persist(items, newSettings) {
 // Màn chào (GC-CHAO) sẽ cho đặt lại tên máy và thành viên.
 function buildFirstRun() {
   const data = emptyDb();
-  const bo = createMember({ ten: 'Bố', mau: '#3B82F6' }, null);
-  const me = createMember({ ten: 'Mẹ', mau: '#EC4899' }, null);
-  const con = createMember({ ten: 'Con', mau: '#10B981' }, null);
+  const bo = createMember({ ten: 'Bố', mau: '#3B82F6', thuTu: 0 }, null);
+  const me = createMember({ ten: 'Mẹ', mau: '#EC4899', thuTu: 1 }, null);
+  const con = createMember({ ten: 'Con', mau: '#10B981', thuTu: 2 }, null);
   const may = createDevice({ ten: 'Máy này', chuMayId: bo.id, laSoChinh: true });
   for (const m of [bo, me, con]) m.mayTaoId = may.id;
   data.thanhVien.push(bo, me, con);
@@ -149,6 +149,10 @@ export function storageMode() {
 export async function list(table, { includeDeleted = false } = {}) {
   assertTable(table);
   const rows = includeDeleted ? db[table] : db[table].filter((r) => !r.daXoa);
+  // Danh mục, thành viên: theo thứ tự đã đặt (thuTu), rồi theo tên.
+  if (table === 'danhMuc' || table === 'thanhVien') {
+    return clone(rows).sort((a, b) => (a.thuTu ?? 100) - (b.thuTu ?? 100) || a.ten.localeCompare(b.ten, 'vi'));
+  }
   return clone(rows);
 }
 
@@ -241,9 +245,9 @@ function buildFakeData(seed) {
   const pick = (arr) => arr[Math.floor(rand() * arr.length)];
   const data = emptyDb();
 
-  const bo = { ...createMember({ ten: 'Bố', mau: '#3B82F6' }, 'may_bo'), id: 'tv_bo' };
-  const me = { ...createMember({ ten: 'Mẹ', mau: '#EC4899' }, 'may_bo'), id: 'tv_me' };
-  const con = { ...createMember({ ten: 'Con', mau: '#10B981' }, 'may_bo'), id: 'tv_con' };
+  const bo = { ...createMember({ ten: 'Bố', mau: '#3B82F6', thuTu: 0 }, 'may_bo'), id: 'tv_bo' };
+  const me = { ...createMember({ ten: 'Mẹ', mau: '#EC4899', thuTu: 1 }, 'may_bo'), id: 'tv_me' };
+  const con = { ...createMember({ ten: 'Con', mau: '#10B981', thuTu: 2 }, 'may_bo'), id: 'tv_con' };
   data.thanhVien.push(bo, me, con);
 
   const mayBo = { ...createDevice({ ten: 'Điện thoại Bố', chuMayId: 'tv_bo', laSoChinh: true }), id: 'may_bo' };

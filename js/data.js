@@ -109,8 +109,8 @@ export function createDevice({ ten, chuMayId = null, laSoChinh = false }) {
   return { id: newId('may'), ten, chuMayId, laSoChinh, suaLuc: nowIso() };
 }
 
-export function createMember({ ten, mau = '#64748B' }, deviceId) {
-  return { id: newId('tv'), ten, mau, an: false, mayTaoId: deviceId, suaLuc: nowIso() };
+export function createMember({ ten, mau = '#64748B', thuTu = 100 }, deviceId) {
+  return { id: newId('tv'), ten, mau, thuTu, an: false, mayTaoId: deviceId, suaLuc: nowIso() };
 }
 
 export function createCategory({ ten, icon = 'label', mau = '#64748B', thuTu = 100 }, deviceId) {
