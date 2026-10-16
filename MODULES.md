@@ -26,10 +26,11 @@ Nếu không chắc phần đó thuộc mã nào, cứ mô tả điều thấy t
 | GC-FAB | Nút + đỏ nổi trên mọi tab | js/fab.js, css/fab.css | Riêng |
 | GC-CAIDAT | Tab Cài đặt: tên máy, người dùng máy này, sáng tối, thêm sửa ẩn danh mục và thành viên | js/screen-caidat.js, css/caidat.css | Riêng |
 | GC-CHAO | Màn chào lần đầu mở app: máy đầu tiên (sổ chính) hoặc nạp file từ sổ chính, đặt tên máy, chọn bạn là ai | js/welcome.js, css/welcome.css | Riêng |
+| GC-SAOLUU | Nhóm Sao lưu trong Cài đặt: tải file sao lưu, gửi file qua Zalo, khôi phục từ file, ngày sao lưu lần cuối | js/backup.js, css/backup.css | Riêng |
 | GC-NAV | Thanh 3 tab dưới đáy, khung trang, thứ tự khởi động app, trang chờ của Báo cáo | js/nav.js, js/app.js, css/nav.css, index.html | Riêng |
 | GC-THEME | Màu sắc, chữ, chế độ tối, nút, chip, ô nhập, thông báo nhỏ, định dạng tiền và ngày | css/theme.css, js/ui.js | Dùng chung |
 | GC-DATA | Cấu trúc dữ liệu, danh mục mặc định, quy tắc ai được sửa, kiểm tra hợp lệ | js/data.js | Dùng chung |
-| GC-LUU | Nơi duy nhất đọc ghi dữ liệu, lưu thật trên máy (IndexedDB), xuất file và nạp sổ gia đình | js/storage.js | Dùng chung |
+| GC-LUU | Nơi duy nhất đọc ghi dữ liệu, lưu thật trên máy (IndexedDB), xuất file, nạp sổ gia đình, khôi phục từ file sao lưu | js/storage.js | Dùng chung |
 | GC-DEPLOY | Số phiên bản, cấu hình Vercel | js/version.js, vercel.json | Riêng |
 
 **Riêng**: sửa không ảnh hưởng phần khác.

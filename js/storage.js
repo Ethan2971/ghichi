@@ -161,7 +161,7 @@ export function parseFile(text) {
   try { raw = JSON.parse(text); } catch { throw new Error('File không phải dạng JSON'); }
   if (!raw || raw.app !== FILE_APP) throw new Error('Đây không phải file của GhiChi');
   if ((raw.schemaVersion ?? 1) > emptyDb().schemaVersion) throw new Error('File từ bản GhiChi mới hơn, hãy cập nhật app');
-  const data = { tuMay: raw.tuMay ?? null };
+  const data = { tuMay: raw.tuMay ?? null, xuatLuc: typeof raw.xuatLuc === 'string' ? raw.xuatLuc : null };
   let skipped = 0;
   for (const t of TABLES) {
     const rows = Array.isArray(raw[t]) ? raw[t] : [];
@@ -191,6 +191,39 @@ export async function joinFamily(data, { tenMay, chuMayId }) {
   next.thietBi.push(may);
   const nextSettings = { ...settings, deviceId: may.id, daChao: true };
 
+  if (idb) {
+    const tx = idb.transaction([...TABLES, SETTINGS_STORE], 'readwrite');
+    for (const t of TABLES) {
+      tx.objectStore(t).clear();
+      for (const r of next[t]) tx.objectStore(t).put(r);
+    }
+    tx.objectStore(SETTINGS_STORE).put(nextSettings, SETTINGS_KEY);
+    await done(tx);
+  }
+  db = next;
+  settings = nextSettings;
+  emit('*', null, 'init');
+}
+
+// Khôi phục từ file sao lưu (GC-SAOLUU): thay toàn bộ dữ liệu máy này bằng dữ liệu trong file,
+// và máy này nhận lại mã thiết bị của máy đã xuất file, để vẫn sửa xoá được các khoản của mình.
+// Chỉ dùng cho file của chính máy này hoặc của máy cũ đã thay. Gộp file người khác là việc của GC-GOP.
+export async function restoreBackup(data) {
+  const deviceId = data.tuMay?.id;
+  if (!deviceId || !data.thietBi.some((d) => d.id === deviceId)) throw new Error('File thiếu thông tin máy đã xuất');
+  const next = emptyDb();
+  const cats = new Map(next.danhMuc.map((c) => [c.id, c]));
+  for (const c of data.danhMuc) cats.set(c.id, clone(c));
+  next.danhMuc = [...cats.values()];
+  for (const t of ['thanhVien', 'thietBi', 'hanMuc', 'khoanChi', 'lichSuGop']) next[t] = clone(data[t] ?? []);
+  // Liên kết phải đúng hết thì mới ghi, tránh nạp dở.
+  for (const t of ['thietBi', 'hanMuc', 'khoanChi']) {
+    for (const r of next[t]) {
+      const errs = validateRefs(t, r, next);
+      if (errs.length) throw new Error(`File bị lỗi liên kết: ${errs[0]}`);
+    }
+  }
+  const nextSettings = { ...settings, deviceId, daChao: true };
   if (idb) {
     const tx = idb.transaction([...TABLES, SETTINGS_STORE], 'readwrite');
     for (const t of TABLES) {

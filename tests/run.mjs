@@ -199,6 +199,22 @@ await test('GC-DS: kỳ ngày, tuần, tháng, năm và chuyển kỳ', async ()
   assert.equal(periodLabel('year', '2025-03-01', '2026-10-16'), 'Năm 2025');
 });
 
+await test('GC-SAOLUU: khôi phục từ file, nhận lại mã máy, chặn file lỗi liên kết', async () => {
+  await luu.init({ demo: true });
+  const out = await luu.exportData();
+  const n = (await luu.list('khoanChi')).length;
+  await luu.put('khoanChi', data.createExpense({ ngay: '2026-10-16', soTien: 1000, danhMucId: 'dm_an_uong', nguoiChiId: 'tv_bo' }, 'may_bo'));
+  await luu.restoreBackup(luu.parseFile(JSON.stringify(out)).data);
+  assert.equal((await luu.list('khoanChi')).length, n);
+  const other = { ...out, tuMay: { id: 'may_me', ten: 'Mẹ' } };
+  await luu.restoreBackup(luu.parseFile(JSON.stringify(other)).data);
+  assert.equal((await luu.currentDevice()).id, 'may_me');
+  const bad = structuredClone(out);
+  bad.khoanChi[0].danhMucId = 'dm_khong_co';
+  await assert.rejects(luu.restoreBackup(luu.parseFile(JSON.stringify(bad)).data), /lỗi liên kết/);
+  assert.equal((await luu.currentDevice()).id, 'may_me');
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);
