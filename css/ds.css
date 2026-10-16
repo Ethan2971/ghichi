@@ -57,3 +57,61 @@
 .empty .icon { font-size: 52px; color: var(--text-3); }
 .empty h2 { font-size: var(--fs-l); margin: 12px 0 6px; color: var(--text); }
 .empty p { margin: 0; }
+
+/* Chip kỳ: Hôm nay, Hôm qua, Tuần, Tháng, Năm và nút lọc */
+.month-card { padding-top: 8px; }
+.ky-row { display: flex; align-items: center; gap: 4px; }
+.ky-chips {
+  flex: 1; min-width: 0; display: flex; gap: 4px;
+  overflow-x: auto; scrollbar-width: none; padding: 2px 2px;
+}
+.ky-chips::-webkit-scrollbar { display: none; }
+.ky-chips .chip { flex: 1 1 auto; justify-content: center; min-height: 32px; padding: 0 6px; font-size: 0.8rem; white-space: nowrap; }
+.ky-chips .chip[aria-pressed="true"] { font-weight: 700; color: var(--primary-strong); }
+.ds-filter-btn { position: relative; flex: none; width: 36px; height: 36px; }
+.ds-filter-btn[aria-expanded="true"] { background: var(--primary-soft); color: var(--primary-strong); }
+.ds-filter-btn .badge {
+  position: absolute; top: 2px; right: 2px;
+  min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: var(--expense); color: #fff; font-size: 0.68rem; font-weight: 800;
+}
+.month-stats .ds-filtered { color: var(--primary-strong); font-weight: 600; }
+.month-stats .icon.tiny, .ds-filter .icon.tiny { font-size: 15px; vertical-align: -3px; margin-right: 2px; }
+
+/* Bảng lọc: mỗi hàng chip cuộn ngang */
+.ds-filter {
+  display: flex; flex-direction: column; gap: 6px;
+  margin: 8px 0 2px; padding: 8px 0 2px;
+  border-top: 1px solid var(--border); text-align: left;
+}
+.ds-filter-line { display: flex; align-items: center; gap: 8px; }
+.ds-filter-label { flex: none; width: 66px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); }
+.ds-filter-chips { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.ds-filter-chips::-webkit-scrollbar { display: none; }
+.ds-filter-chips .chip { flex: none; min-height: 32px; padding: 0 10px; }
+.ds-filter-chips .chip .icon.tiny { margin: 0; color: var(--c); font-size: 17px; vertical-align: 0; }
+.ds-filter-clear {
+  align-self: flex-end; display: inline-flex; align-items: center;
+  border: 0; background: none; padding: 4px 6px;
+  color: var(--expense); font-size: var(--fs-s); font-weight: 600;
+}
+
+/* Vuốt dòng sang trái để hiện Sửa, Xoá */
+.swipe { position: relative; overflow: hidden; }
+.swipe .row { position: relative; z-index: 1; background: var(--surface); transition: transform 0.22s var(--ease), background-color 0.2s; touch-action: pan-y; }
+.swipe-actions {
+  position: absolute; inset: 0 0 0 auto; width: 144px;
+  display: flex; visibility: hidden;
+}
+.swipe.is-open .swipe-actions, .swipe:has(.row[style*="translateX"]) .swipe-actions { visibility: visible; }
+.swipe-actions button {
+  flex: 1; border: 0; color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font-size: var(--fs-xs); font-weight: 700;
+}
+.swipe-edit { background: var(--primary); }
+.swipe-del { background: var(--expense); }
+.rows li + li .row { border-top: 1px solid var(--border); }
+.empty .btn { margin-top: 12px; }
+.swipe .row:hover { background: var(--surface-2); }

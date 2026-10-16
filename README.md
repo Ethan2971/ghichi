@@ -30,6 +30,6 @@ Cách gọi mã để sửa từng phần: xem [MODULES.md](MODULES.md).
 | GC-NAV | js/nav.js, css/nav.css, js/app.js, index.html | Xong (v0.1) |
 | GC-FORM | js/form.js, js/calc.js, js/picker.js, css/form.css | Xong (v0.1) |
 | GC-FAB | js/fab.js, css/fab.css | v0.1: nút cố định. v1.0: kéo thả |
-| GC-DS | js/screen-ds.js, css/ds.css | v0.1: xem theo tháng. v0.5: kỳ, lọc, vuốt |
+| GC-DS | js/screen-ds.js, css/ds.css | Xong (v0.5): kỳ Hôm nay, Hôm qua, Tuần, Tháng, Năm; lọc; vuốt Sửa, Xoá |
 | GC-CAIDAT | js/screen-caidat.js, css/caidat.css | Xong (v0.5) |
 | GC-CHAO | js/welcome.js, css/welcome.css | Xong (v0.5) |

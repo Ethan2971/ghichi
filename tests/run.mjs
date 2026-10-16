@@ -187,6 +187,18 @@ await test('GC-LUU: máy mới nạp sổ gia đình, giữ mã thành viên, kh
   await assert.rejects(luu.joinFamily(luu.parseFile(JSON.stringify(out)).data, { tenMay: 'X', chuMayId: 'tv_me' }), /đã có khoản chi/);
 });
 
+await test('GC-DS: kỳ ngày, tuần, tháng, năm và chuyển kỳ', async () => {
+  const { periodRange, shiftPeriod, periodLabel } = await import('../js/screen-ds.js');
+  assert.deepEqual(periodRange('week', '2026-10-16'), ['2026-10-12', '2026-10-18']);
+  assert.deepEqual(periodRange('week', '2026-10-18'), ['2026-10-12', '2026-10-18']);
+  assert.deepEqual(periodRange('month', '2026-02-10'), ['2026-02-01', '2026-02-28']);
+  assert.deepEqual(periodRange('year', '2026-10-16'), ['2026-01-01', '2026-12-31']);
+  assert.equal(shiftPeriod('month', '2026-01-31', -1), '2025-12-01');
+  assert.equal(shiftPeriod('week', '2026-10-16', -1), '2026-10-09');
+  assert.equal(periodLabel('week', '2026-10-16', '2026-10-16'), 'Tuần 12/10 – 18/10');
+  assert.equal(periodLabel('year', '2025-03-01', '2026-10-16'), 'Năm 2025');
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);
