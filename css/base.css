@@ -1,0 +1,13 @@
+/* GC-DEPLOY — Kiểu tối thiểu cho trang khung tạm. Sẽ được thay bằng GC-THEME. */
+:root { color-scheme: light dark; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body { margin: 0; padding: 16px; max-width: 640px; margin-inline: auto; line-height: 1.5; }
+h1 { font-size: 1.5rem; margin: 0 0 4px; }
+.muted { opacity: 0.65; font-size: 0.875rem; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 16px 0; }
+.card { border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-radius: 12px; padding: 12px; }
+.card b { display: block; font-size: 1.25rem; }
+ul { list-style: none; padding: 0; margin: 0; }
+li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0;
+     border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+li .amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.error { color: #DC2626; }

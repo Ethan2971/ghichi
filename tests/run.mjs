@@ -1,0 +1,112 @@
+// Kiểm tra nhanh GC-DATA và GC-LUU. Chạy: node tests/run.mjs
+import assert from 'node:assert/strict';
+import * as data from '../js/data.js';
+import * as luu from '../js/storage.js';
+
+const results = [];
+async function test(name, fn) {
+  try { await fn(); results.push(['OK  ', name]); }
+  catch (e) { results.push(['LỖI ', `${name}: ${e.message}`]); }
+}
+
+// ---- GC-DATA ----
+await test('GC-DATA: 10 danh mục mặc định, mã cố định, không trùng', () => {
+  const ids = data.DEFAULT_CATEGORIES.map((c) => c.id);
+  assert.equal(ids.length, 10);
+  assert.equal(new Set(ids).size, 10);
+  assert.ok(ids.every((id) => id.startsWith('dm_')));
+});
+await test('GC-DATA: mã hạn mức ghép từ danh mục và tháng', () => {
+  assert.equal(data.budgetId('dm_an_uong', '2026-10'), 'hm_dm_an_uong_2026-10');
+});
+await test('GC-DATA: newId ngẫu nhiên, có tiền tố', () => {
+  const a = data.newId('k'), b = data.newId('k');
+  assert.match(a, /^k_[0-9a-z]{10}$/);
+  assert.notEqual(a, b);
+});
+await test('GC-DATA: kiểm tra ngày và tháng', () => {
+  assert.ok(data.isValidDate('2026-10-16'));
+  assert.ok(!data.isValidDate('2026-02-30'));
+  assert.ok(!data.isValidDate('16/10/2026'));
+  assert.ok(data.isValidMonth('2026-10'));
+  assert.ok(!data.isValidMonth('2026-13'));
+});
+await test('GC-DATA: toDateStr dùng giờ máy, không lệch múi giờ', () => {
+  assert.equal(data.toDateStr(new Date(2026, 9, 16, 0, 30)), '2026-10-16');
+  assert.equal(data.toDateStr(new Date(2026, 9, 16, 23, 59)), '2026-10-16');
+});
+await test('GC-DATA: khoản chi sai bị báo lỗi', () => {
+  const bad = data.createExpense({ ngay: '2026-10-16', soTien: 1500.5, danhMucId: '', nguoiChiId: 'tv_bo' }, 'may_bo');
+  const errs = data.validate('khoanChi', bad);
+  assert.ok(errs.some((e) => e.includes('Số tiền')));
+  assert.ok(errs.some((e) => e.includes('danh mục')));
+});
+await test('GC-DATA: quyền sửa theo quy tắc', () => {
+  const mayBo = { id: 'may_bo', laSoChinh: true }, mayMe = { id: 'may_me', laSoChinh: false };
+  const k = { mayGhiId: 'may_me' };
+  assert.ok(data.canEdit('khoanChi', k, mayMe));
+  assert.ok(!data.canEdit('khoanChi', k, mayBo), 'sổ chính cũng không sửa khoản của máy khác');
+  assert.ok(data.canEdit('hanMuc', {}, mayBo));
+  assert.ok(!data.canEdit('hanMuc', {}, mayMe));
+  assert.ok(data.canEdit('danhMuc', { mayTaoId: 'app' }, mayBo));
+  assert.ok(!data.canEdit('danhMuc', { mayTaoId: 'app' }, mayMe));
+});
+
+// ---- GC-LUU ----
+await luu.init();
+const events = [];
+luu.store.addEventListener('dulieu-doi', (e) => events.push(e.detail));
+
+await test('GC-LUU: dữ liệu giả có đủ bảng và liên kết đúng', async () => {
+  const [k, dm, tv, tb] = await Promise.all(['khoanChi', 'danhMuc', 'thanhVien', 'thietBi'].map((t) => luu.list(t)));
+  assert.ok(k.length > 50, `chỉ có ${k.length} khoản`);
+  const db = { khoanChi: k, danhMuc: dm, thanhVien: tv, thietBi: tb, hanMuc: [], lichSuGop: [] };
+  for (const r of k) assert.deepEqual(data.validateRefs('khoanChi', r, db), []);
+});
+await test('GC-LUU: dữ liệu giả giống nhau mỗi lần mở', async () => {
+  const a = (await luu.list('khoanChi')).map((k) => k.soTien).join();
+  await luu.init();
+  const b = (await luu.list('khoanChi')).map((k) => k.soTien).join();
+  assert.equal(a, b);
+});
+let added;
+await test('GC-LUU: thêm khoản chi, phát sự kiện "them"', async () => {
+  events.length = 0;
+  added = await luu.put('khoanChi', data.createExpense(
+    { ngay: data.todayStr(), soTien: 45000, danhMucId: 'dm_an_uong', nguoiChiId: 'tv_bo', ghiChu: 'Thử' }, 'may_bo'));
+  assert.equal((await luu.get('khoanChi', added.id)).soTien, 45000);
+  assert.deepEqual(events.at(-1), { table: 'khoanChi', id: added.id, action: 'them' });
+});
+await test('GC-LUU: xoá là đánh dấu, hoàn tác được, mỗi lần một sự kiện', async () => {
+  events.length = 0;
+  await luu.remove('khoanChi', added.id);
+  assert.ok(!(await luu.list('khoanChi')).some((k) => k.id === added.id));
+  assert.ok((await luu.list('khoanChi', { includeDeleted: true })).some((k) => k.id === added.id));
+  await luu.restore('khoanChi', added.id);
+  assert.ok((await luu.list('khoanChi')).some((k) => k.id === added.id));
+  assert.deepEqual(events.map((e) => e.action), ['xoa', 'hoantac']);
+});
+await test('GC-LUU: không sửa được khoản của máy khác', async () => {
+  const other = (await luu.list('khoanChi')).find((k) => k.mayGhiId === 'may_me');
+  await assert.rejects(luu.put('khoanChi', { ...other, soTien: 1000 }), /quyền/);
+});
+await test('GC-LUU: chặn khoản chi trỏ tới danh mục không tồn tại', async () => {
+  const bad = data.createExpense({ ngay: data.todayStr(), soTien: 1000, danhMucId: 'dm_khong_co', nguoiChiId: 'tv_bo' }, 'may_bo');
+  await assert.rejects(luu.put('khoanChi', bad), /Danh mục không tồn tại/);
+});
+await test('GC-LUU: ẩn danh mục giữ nguyên khoản cũ', async () => {
+  const before = (await luu.list('khoanChi')).filter((k) => k.danhMucId === 'dm_giai_tri').length;
+  await luu.remove('danhMuc', 'dm_giai_tri');
+  assert.equal((await luu.get('danhMuc', 'dm_giai_tri')).an, true);
+  assert.equal((await luu.list('khoanChi')).filter((k) => k.danhMucId === 'dm_giai_tri').length, before);
+});
+await test('GC-LUU: dữ liệu trả về là bản sao, sửa ngoài không ảnh hưởng kho', async () => {
+  const rows = await luu.list('khoanChi');
+  rows[0].soTien = -1;
+  assert.notEqual((await luu.get('khoanChi', rows[0].id)).soTien, -1);
+});
+
+for (const [s, n] of results) console.log(s + n);
+const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
+console.log(`\n${results.length - failed}/${results.length} đạt`);
+process.exit(failed ? 1 : 0);
