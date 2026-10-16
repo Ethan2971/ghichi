@@ -4,12 +4,22 @@
 
 import * as luu from './storage.js';
 import { createExpense, canEdit, todayStr } from './data.js';
-import { esc, icon, fmtNumber, parseMoney, addDays, toast } from './ui.js';
+import { esc, icon, fmtNumber, addDays, toast } from './ui.js';
+import { press, evaluate, hasOperator, formatExpr, fromAmount } from './calc.js';
 
-const MAX_DIGITS = 12;
+// Bàn phím máy tính: [phím, nhãn, kiểu]
+const KEYS = [
+  ['clear', 'C', 'fn'], ['(', '(', 'fn'], [')', ')', 'fn'], ['÷', '÷', 'op'],
+  ['7', '7'], ['8', '8'], ['9', '9'], ['×', '×', 'op'],
+  ['4', '4'], ['5', '5'], ['6', '6'], ['−', '−', 'op'],
+  ['1', '1'], ['2', '2'], ['3', '3'], ['+', '+', 'op'],
+  ['000', '000'], ['0', '0'], [',', ','], ['back', 'backspace', 'icon'],
+];
+const KEYBOARD = { '/': '÷', '*': '×', x: '×', '-': '−', '+': '+', '.': ',', ',': ',', '(': '(', ')': ')',
+  Backspace: 'back', Delete: 'clear', Escape: null };
 
 let dialog = null;
-let state = null; // { mode: 'them' | 'sua' | 'xem', record, device, danhMucId, nguoiChiId, ngay }
+let state = null; // { mode: 'them' | 'sua' | 'xem', record, device, expr, danhMucId, nguoiChiId, ngay }
 
 function build() {
   dialog = document.createElement('dialog');
@@ -27,14 +37,22 @@ function build() {
       <div class="sheet-body">
         <p class="f-note" hidden></p>
 
-        <label class="amount-box">
-          <span class="sr-only">Số tiền</span>
-          <input id="f-sotien" inputmode="numeric" autocomplete="off" placeholder="0" enterkeyhint="done">
-          <span class="currency">₫</span>
-        </label>
-        <div class="chips quick">
-          <button type="button" class="chip" data-act="them000">+000</button>
-          <button type="button" class="chip" data-act="xoaso">${icon('backspace')}</button>
+        <button type="button" class="amount-box" data-act="may-tinh" aria-label="Số tiền, bấm để mở máy tính">
+          <span class="f-expr num"></span>
+          <span class="amount-line">
+            <span class="f-sotien num">0</span><span class="currency">₫</span>
+            <span class="calc-hint">${icon('calculate')}</span>
+          </span>
+        </button>
+
+        <div class="calc" hidden>
+          <div class="calc-keys">
+            ${KEYS.map(([k, label, kind = 'num']) => `
+              <button type="button" class="key key-${kind}" data-key="${esc(k)}"
+                ${kind === 'icon' ? 'aria-label="Xoá một số"' : ''}>${kind === 'icon' ? icon(label) : esc(label)}</button>`).join('')}
+            <button type="button" class="key key-fn" data-key="=">=</button>
+            <button type="button" class="key key-apply" data-act="ap-dung">${icon('check')}<span>Áp dụng</span></button>
+          </div>
         </div>
 
         <section>
@@ -73,7 +91,7 @@ function build() {
   const form = dialog.querySelector('form');
   form.addEventListener('submit', (e) => { e.preventDefault(); save(); });
   form.addEventListener('click', onClick);
-  form.querySelector('#f-sotien').addEventListener('input', onAmountInput);
+  dialog.addEventListener('keydown', onKeydown);
   form.querySelector('#f-ngay').addEventListener('change', (e) => {
     if (e.target.value) setNgay(e.target.value);
   });
@@ -94,32 +112,77 @@ function onClick(e) {
   if (btn.dataset.act === 'dong') return close();
   if (btn.dataset.act === 'xoa') return removeRecord();
   if (state.mode === 'xem') return;
-  if (btn.dataset.act === 'them000') return appendDigits('000');
-  if (btn.dataset.act === 'xoaso') return appendDigits(null);
+  if (btn.dataset.act === 'may-tinh') return toggleCalc(true);
+  if (btn.dataset.act === 'ap-dung') return applyCalc();
+  if (btn.dataset.key) return pressKey(btn.dataset.key);
   if (btn.dataset.cat) { state.danhMucId = btn.dataset.cat; return paintChoices(); }
   if (btn.dataset.member) { state.nguoiChiId = btn.dataset.member; return paintChoices(); }
   if (btn.dataset.ngay) return setNgay(addDays(todayStr(), Number(btn.dataset.ngay)));
 }
 
-// ---------- Số tiền ----------
+// ---------- Số tiền và máy tính ----------
 
-const amountInput = () => dialog.querySelector('#f-sotien');
+const calcEl = () => dialog.querySelector('.calc');
+const calcOpen = () => !calcEl().hidden;
 
-function setAmount(n) {
-  amountInput().value = n ? fmtNumber(n) : '';
+// Kết quả biểu thức, làm tròn tới đồng. null nếu chưa tính được.
+function currentAmount() {
+  const v = evaluate(state.expr);
+  return v === null ? null : Math.round(v);
 }
 
-function onAmountInput() {
-  const digits = amountInput().value.replace(/\D/g, '').replace(/^0+/, '').slice(0, MAX_DIGITS);
-  setAmount(digits ? Number(digits) : 0);
+function paintAmount() {
+  const v = currentAmount();
+  const showExpr = hasOperator(state.expr);
+  const exprEl = dialog.querySelector('.f-expr');
+  exprEl.textContent = showExpr ? formatExpr(state.expr) : '';
+  exprEl.hidden = !showExpr;
+  const amountEl = dialog.querySelector('.f-sotien');
+  amountEl.textContent = v === null ? (state.expr ? '…' : '0') : fmtNumber(v);
+  amountEl.classList.toggle('empty', !state.expr);
+  amountEl.classList.toggle('negative', v !== null && v <= 0 && !!state.expr);
+}
+
+function pressKey(key) {
+  if (key === '=') {
+    const v = currentAmount();
+    if (v !== null) state.expr = fromAmount(Math.max(v, 0));
+  } else {
+    state.expr = press(state.expr, key);
+  }
+  paintAmount();
   clearError();
 }
 
-function appendDigits(add) {
-  let digits = String(parseMoney(amountInput().value) || '');
-  digits = add === null ? digits.slice(0, -1) : (digits ? digits + add : '');
-  setAmount(digits ? Number(digits.slice(0, MAX_DIGITS)) : 0);
+function toggleCalc(open) {
+  if (state.mode === 'xem') return;
+  calcEl().hidden = !open;
+  dialog.querySelector('.amount-box').classList.toggle('active', open);
+  if (open) calcEl().scrollIntoView({ block: 'nearest' });
+}
+
+// Tính xong, gán vào ô số tiền và thu máy tính lại. Trả về false nếu số tiền chưa hợp lệ.
+function applyCalc() {
+  const v = currentAmount();
+  if (v === null || v <= 0) {
+    showError(state.expr ? 'Số tiền phải lớn hơn 0' : 'Nhập số tiền');
+    toggleCalc(true);
+    return false;
+  }
+  state.expr = fromAmount(v);
+  paintAmount();
+  toggleCalc(false);
   clearError();
+  return true;
+}
+
+// Bàn phím máy tính (khi dùng trên máy tính để bàn).
+function onKeydown(e) {
+  if (!state || !calcOpen() || e.target.matches('input, textarea')) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); e.key === 'Enter' ? applyCalc() : pressKey('='); return; }
+  const key = /^\d$/.test(e.key) ? e.key : KEYBOARD[e.key];
+  if (key) { e.preventDefault(); pressKey(key); }
 }
 
 // ---------- Ngày ----------
@@ -200,19 +263,21 @@ export async function openForm({ id } = {}) {
   }
 
   await paintLists();
-  setAmount(record?.soTien ?? 0);
+  state.expr = fromAmount(record?.soTien ?? 0);
+  paintAmount();
   dialog.querySelector('#f-ghichu').value = record?.ghiChu ?? '';
   dialog.querySelector('#f-ngay').value = state.ngay;
-  for (const el of dialog.querySelectorAll('input, .cat, [data-member], [data-ngay], .quick .chip')) {
+  for (const el of dialog.querySelectorAll('input, .cat, [data-member], [data-ngay], .amount-box')) {
     el.disabled = mode === 'xem';
   }
   paintChoices();
+  calcEl().hidden = true;
+  toggleCalc(mode === 'them');
 
   dialog.classList.remove('closing');
   dialog.showModal();
   history.pushState({ sheet: true }, '', location.href);
-  if (mode === 'them') amountInput().focus();
-  else dialog.querySelector('.sheet-head .btn-icon').focus();
+  dialog.querySelector('.sheet-head .btn-icon').focus();
 }
 
 let closeResolver = null;
@@ -250,8 +315,8 @@ function clearError() {
 
 async function save() {
   if (!state || state.mode === 'xem') return;
-  const soTien = parseMoney(amountInput().value);
-  if (!soTien) { showError('Nhập số tiền'); amountInput().focus(); return; }
+  if (!applyCalc()) return;
+  const soTien = currentAmount();
   if (!state.danhMucId) { showError('Chọn một danh mục'); return; }
   if (!state.nguoiChiId) { showError('Chọn người chi'); return; }
 

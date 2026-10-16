@@ -124,6 +124,34 @@ await test('GC-THEME: nhãn ngày Hôm nay / Hôm qua', () => {
   assert.equal(ui.addDays('2026-03-01', -1), '2026-02-28');
 });
 
+// ---- GC-FORM: máy tính nhỏ ----
+const calc = await import('../js/calc.js');
+const typeKeys = (keys) => keys.reduce((e, k) => calc.press(e, k), '');
+await test('GC-FORM: máy tính ưu tiên nhân chia, có ngoặc', () => {
+  assert.equal(calc.evaluate('45000+20000×2'), 85000);
+  assert.equal(calc.evaluate('(45000+5000)×2'), 100000);
+  assert.equal(calc.evaluate('100000÷4−5000'), 20000);
+  assert.equal(calc.evaluate('2,5×1000'), 2500);
+});
+await test('GC-FORM: máy tính tự đóng ngoặc, bỏ dấu thừa, chia 0 thì null', () => {
+  assert.equal(calc.evaluate('(20000+30000'), 50000);
+  assert.equal(calc.evaluate('50000+'), 50000);
+  assert.equal(calc.evaluate('5÷0'), null);
+  assert.equal(calc.evaluate(''), null);
+});
+await test('GC-FORM: bấm phím tạo biểu thức hợp lệ', () => {
+  assert.equal(typeKeys(['4', '5', '000', '+', '×', '2']), '45000×2');
+  assert.equal(typeKeys(['+', '0', '0', '5']), '5');
+  assert.equal(typeKeys([',', '5', ',', '1']), '0,51');
+  assert.equal(typeKeys(['2', '(', '3', ')', '4']), '2×(3)×4');
+  assert.equal(typeKeys(['1', ')']), '1');
+  assert.equal(typeKeys(['1', '2', 'back']), '1');
+});
+await test('GC-FORM: hiển thị biểu thức có dấu chấm nghìn', () => {
+  assert.equal(calc.formatExpr('45000+20000×2'), '45.000 + 20.000 × 2');
+  assert.equal(calc.formatExpr('1,2345'), '1,2345');
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);

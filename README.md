@@ -26,6 +26,6 @@ node tests/run.mjs
 | GC-DEPLOY | vercel.json, js/version.js | Xong (v0.1) |
 | GC-THEME | css/theme.css, js/ui.js | Xong (v0.1) |
 | GC-NAV | js/nav.js, css/nav.css, js/app.js, index.html | Xong (v0.1) |
-| GC-FORM | js/form.js, css/form.css | Xong (v0.1) |
+| GC-FORM | js/form.js, js/calc.js, css/form.css | Xong (v0.1) |
 | GC-FAB | js/fab.js, css/fab.css | v0.1: nút cố định. v1.0: kéo thả |
 | GC-DS | js/screen-ds.js, css/ds.css | v0.1: xem theo tháng. v0.5: kỳ, lọc, vuốt |
