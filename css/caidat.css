@@ -1,8 +1,7 @@
 /* GC-CAIDAT — Tab Cài đặt và bảng sửa danh mục, thành viên, tên máy. */
 
-.cd { padding: calc(14px + env(safe-area-inset-top, 0px)) 0 0; }
-.cd-title { font-size: var(--fs-xl); font-weight: 800; margin: 0 4px 6px; }
-.cd-group { margin-top: 18px; }
+.cd { padding: calc(2px + env(safe-area-inset-top, 0px)) 0 0; }
+.cd-group { margin-top: 16px; }
 .cd-group > h3 {
   display: flex; align-items: center; gap: 6px;
   margin: 0 4px 8px; font-size: var(--fs-s); font-weight: 700; color: var(--text-2);
@@ -18,7 +17,13 @@
   min-height: 56px; padding: 8px 14px;
   border: 0; background: none; text-align: left;
 }
-.cd-list > .cd-row + .cd-row { border-top: 1px solid var(--border); }
+.cd-list > .cd-row + .cd-row, .cd-scroll > .cd-row + .cd-row, .cd-scroll + .cd-row { border-top: 1px solid var(--border); }
+/* Danh mục, thành viên: cuộn trong khung khoảng 4 dòng, nút Thêm luôn hiện bên dưới */
+.cd-scroll {
+  max-height: calc(56px * 4 + 28px);
+  overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
 button.cd-row:hover { background: var(--surface-2); }
 .cd-static { cursor: default; }
 .cd-ic {
@@ -54,10 +59,13 @@ button.cd-row:hover { background: var(--surface-2); }
   background: var(--surface-2);
 }
 .segmented button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   min-height: 40px; border: 0; border-radius: 999px; background: none;
   color: var(--text-2); font-weight: 600;
   transition: background-color 0.2s, color 0.2s;
 }
+.segmented button .icon { font-size: 18px; }
+.segmented button[aria-checked="true"] .icon { color: var(--primary-strong); }
 .segmented button[aria-checked="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-1); }
 
 .cd-about { text-align: center; margin: 24px 0 0; }

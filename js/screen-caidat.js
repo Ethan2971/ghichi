@@ -19,7 +19,7 @@ const COLORS = [
   '#EF4444', '#F97316', '#EAB308', '#84CC16', '#10B981', '#14B8A6',
   '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#64748B', '#A16207',
 ];
-const THEMES = [['auto', 'Tự động'], ['light', 'Sáng'], ['dark', 'Tối']];
+const THEMES = [['auto', 'Tự động', 'brightness_auto'], ['light', 'Sáng', 'light_mode'], ['dark', 'Tối', 'dark_mode']];
 const MODE_NOTE = {
   idb: 'Dữ liệu lưu trên máy này',
   demo: 'Đang xem thử với dữ liệu giả, tải lại trang sẽ về như cũ',
@@ -51,8 +51,6 @@ async function render() {
 
   root.innerHTML = `
     <div class="cd">
-      <h2 class="cd-title">Cài đặt</h2>
-
       <section class="cd-group">
         <h3>Máy này</h3>
         <div class="card cd-list">
@@ -79,8 +77,8 @@ async function render() {
       <section class="cd-group">
         <h3>Giao diện</h3>
         <div class="segmented" role="radiogroup" aria-label="Chế độ sáng tối">
-          ${THEMES.map(([v, label]) => `
-            <button type="button" role="radio" data-theme="${v}" aria-checked="${settings.theme === v}">${label}</button>`).join('')}
+          ${THEMES.map(([v, label, ic]) => `
+            <button type="button" role="radio" data-theme="${v}" aria-checked="${settings.theme === v}">${icon(ic)}<span>${label}</span></button>`).join('')}
         </div>
       </section>
 
@@ -118,7 +116,7 @@ function groupHtml(table, title, rows, device) {
     <section class="cd-group">
       <h3>${title} <span class="cd-count">${visible.length}</span></h3>
       <div class="card cd-list">
-        ${visible.map(row).join('')}
+        <div class="cd-scroll">${visible.map(row).join('')}</div>
         <button type="button" class="cd-row cd-add" data-add="${table}">
           <span class="cd-ic">${icon('add')}</span>
           <span class="cd-text"><span class="cd-main">Thêm ${title.toLowerCase()}</span></span>
@@ -128,7 +126,7 @@ function groupHtml(table, title, rows, device) {
         <button type="button" class="cd-toggle" data-toggle="${table}">
           ${icon(showHidden[table] ? 'expand_less' : 'expand_more')} Đã ẩn (${hidden.length})
         </button>
-        ${showHidden[table] ? `<div class="card cd-list">${hidden.map(row).join('')}</div>` : ''}` : ''}
+        ${showHidden[table] ? `<div class="card cd-list"><div class="cd-scroll">${hidden.map(row).join('')}</div></div>` : ''}` : ''}
     </section>`;
 }
 
