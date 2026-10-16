@@ -16,6 +16,9 @@ Ví dụ:
 - `Sửa GC-HANMUC: cảnh báo ở 90% thay vì 80%`
 - `Sửa GC-GOP: hiện thêm danh sách khoản sẽ thêm trong bảng xem trước`
 - `Sửa GC-NAV: đổi tên tab Báo cáo thành Thống kê`
+- `Sửa GC-FAB: nút + tròn thay vì vuông bo góc`
+- `Sửa GC-PWA: thông báo thêm nhanh ghi thêm số đã chi trong tháng`
+- `Sửa GC-HIEUUNG: chuyển tab nhanh hơn, bỏ rung khi lưu`
 
 Claude sẽ chỉ mở và sửa các file của mã đó, chạy lại kiểm tra tự động, rồi lưu thành một
 commit có ghi mã ở đầu (ví dụ `GC-FORM: ...`) và tăng số phiên bản trong `js/version.js`.
@@ -59,6 +62,8 @@ nào có thể bị ảnh hưởng và kiểm tra lại các phần đó sau khi
   - GC-CAIDAT chỉ chừa chỗ và gọi `mountBudget()` của GC-HANMUC, `mountMerge()` của GC-GOP, `mountBackup()` của GC-SAOLUU.
   - GC-GOP dùng `buildFile()`, `share()` của GC-SAOLUU để gửi file, và `replaceData()` của GC-LUU để ghi bản đã gộp.
   - GC-TK lấy số hạn mức qua `budgetForPeriod()` và mở bảng đặt hạn mức qua `openBudgetSheet()` của GC-HANMUC.
+  - GC-CAIDAT gọi `mountInstall()` của GC-PWA cho nhóm Ứng dụng. Nút Xem hôm nay (GC-PWA) chỉ đặt kỳ qua `setPeriod()` của `js/period.js`.
+  - GC-HIEUUNG chỉ nghe sự kiện đổi tab, đổi kỳ, dữ liệu đổi rồi gắn class hiệu ứng, không gọi vào tab nào.
 - Mỗi lần sửa đều tăng số phiên bản ở `js/version.js` và `sw.js` (hai số phải trùng nhau, kiểm tra tự động sẽ báo nếu lệch), để điện thoại cả nhà nhận được bản mới.
 - Mỗi lần sửa đều chạy `node tests/run.mjs` và thử lại trên khung điện thoại trước khi đẩy lên.
 
@@ -71,5 +76,6 @@ Mỗi lần sửa là một commit riêng trên GitHub. Các bản chốt:
 | v0.1.0 | `65ead9d` | Nhập khoản chi, danh sách theo tháng, dữ liệu giả |
 | v0.5.0 | `75e1372` | Lưu thật trên máy, màn chào, cài đặt, kỳ và lọc, báo cáo, sao lưu |
 | v0.8.0 | `80fbcc9` | Hạn mức, gộp dữ liệu cả nhà, nhắc sao lưu |
+| v1.0.0 | (ghi sau khi chốt) | Cài lên điện thoại, chạy khi mất mạng, biểu tượng mới, thông báo thêm nhanh, nút + kéo thả, hiệu ứng |
 
-Nếu một lần sửa không vừa ý, chỉ cần nhắn `Quay lại GC-FORM như bản v0.8.0` hoặc `Bỏ lần sửa GC-DS vừa rồi`.
+Nếu một lần sửa không vừa ý, chỉ cần nhắn `Quay lại GC-FORM như bản v1.0.0` hoặc `Bỏ lần sửa GC-DS vừa rồi`.
