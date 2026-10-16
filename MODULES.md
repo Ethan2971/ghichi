@@ -60,6 +60,6 @@ Mỗi lần sửa là một commit riêng trên GitHub. Các bản chốt:
 | Bản | Commit | Gồm |
 | --- | --- | --- |
 | v0.1.0 | `65ead9d` | Nhập khoản chi, danh sách theo tháng, dữ liệu giả |
-| v0.5.0 | xem commit có tiêu đề `GC-DEPLOY: chốt bản v0.5.0` | Lưu thật trên máy, màn chào, cài đặt, kỳ và lọc, báo cáo, sao lưu |
+| v0.5.0 | `75e1372` | Lưu thật trên máy, màn chào, cài đặt, kỳ và lọc, báo cáo, sao lưu |
 
 Nếu một lần sửa không vừa ý, chỉ cần nhắn `Quay lại GC-FORM như bản v0.5.0` hoặc `Bỏ lần sửa GC-DS vừa rồi`.
