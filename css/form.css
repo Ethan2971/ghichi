@@ -256,3 +256,4 @@
   border-top: 1px solid var(--border);
 }
 .sheet-foot .btn { width: 100%; }
+.f-ngay .chip { padding: 0 12px; }

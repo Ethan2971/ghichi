@@ -131,11 +131,16 @@ function rowHtml(k, cats, members, devices, device) {
     </li>`;
 }
 
-function highlight(id) {
+// Chờ bảng nhập đóng hẳn, cuộn khoản vào giữa màn hình rồi mới tô sáng để người dùng kịp thấy.
+async function highlight(id) {
   pendingHighlight = null;
   const row = root.querySelector(`[data-id="${CSS.escape(id)}"]`);
   if (!row) return;
+  for (let i = 0; i < 20 && document.querySelector('dialog[open]'); i++) {
+    await new Promise((r) => setTimeout(r, 50));
+  }
   row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  await new Promise((r) => setTimeout(r, 250));
   row.classList.remove('moi');
   void row.offsetWidth; // chạy lại hiệu ứng nếu đang tô sáng
   row.classList.add('moi');

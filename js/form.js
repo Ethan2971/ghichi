@@ -91,11 +91,13 @@ function build() {
         </section>
 
         <section>
-          <h3>Ngày giờ</h3>
-          <div class="chips f-ngay">
+          <div class="inline-row">
+            <h3>Ngày giờ</h3>
+            <div class="chips f-ngay">
             <button type="button" class="chip" data-ngay="-1">Hôm qua</button>
             <button type="button" class="chip" data-ngay="0">Hôm nay</button>
             <button type="button" class="chip" data-ngay="1">Ngày mai</button>
+            </div>
           </div>
           <div class="dt-row">
             <div class="stepper stepper-date">
@@ -467,12 +469,11 @@ async function save() {
   const record = state.mode === 'them'
     ? createExpense(fields, state.device.id)
     : { ...state.record, ...fields };
-  const isNew = state.mode === 'them';
 
   await close();
   try {
+    // Không hiện thông báo: danh sách tự cuộn tới khoản vừa lưu và tô sáng (GC-DS).
     await luu.put('khoanChi', record);
-    toast(isNew ? 'Đã thêm khoản chi' : 'Đã lưu thay đổi');
   } catch (err) {
     toast(`Chưa lưu được: ${err.message}`, { ms: 6000 });
   }

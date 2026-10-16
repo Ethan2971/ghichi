@@ -42,7 +42,7 @@
 /* Khoản vừa thêm / sửa: tô sáng rồi mờ dần */
 .row.moi { animation: row-moi 2.2s var(--ease); }
 @keyframes row-moi {
-  0%, 35% { background: var(--highlight); box-shadow: inset 4px 0 0 var(--primary); }
+  0%, 55% { background: var(--highlight); box-shadow: inset 4px 0 0 var(--primary); }
   100% { background: transparent; box-shadow: inset 0 0 0 transparent; }
 }
 
