@@ -20,3 +20,9 @@
 .pwa-bar-later { flex: none; border: 0; background: none; padding: 6px; color: inherit; opacity: 0.8; font-size: var(--fs-s); font-weight: 600; }
 .pwa-bar-go { flex: none; min-height: 38px; padding: 0 16px; font-size: var(--fs-s); }
 body.chao-open .pwa-bar { display: none; }
+
+/* Công tắc bật/tắt thông báo thêm nhanh */
+.pwa-sw { flex: none; width: 44px; height: 26px; border-radius: 13px; background: var(--border); position: relative; transition: background .2s; }
+.pwa-sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+.pwa-sw.is-on { background: var(--primary); }
+.pwa-sw.is-on::after { transform: translateX(18px); }

@@ -5,7 +5,7 @@
 // Bản mới không tự thay ngay: app hỏi "Có bản mới" (js/pwa.js) rồi mới chuyển, để không mất dữ liệu đang nhập.
 // VERSION phải trùng APP_VERSION trong js/version.js (kiểm tra tự động sẽ báo nếu lệch).
 
-const VERSION = '1.0.0-dev.1';
+const VERSION = '1.0.0-dev.2';
 const APP_CACHE = `ghichi-app-${VERSION}`;
 const FONT_CACHE = 'ghichi-fonts';
 const APP_FILES = [
@@ -16,6 +16,7 @@ const APP_FILES = [
     '/icons/maskable-512.png',
     '/icons/apple-touch-icon.png',
     '/icons/favicon-48.png',
+    '/icons/badge-96.png',
     '/js/app.js',
     '/js/backup.js',
     '/js/budget.js',
@@ -65,6 +66,22 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('message', (e) => {
   if (e.data === 'cap-nhat') self.skipWaiting();
+});
+
+// Thông báo thêm nhanh (js/pwa.js): nút "Thêm khoản chi" hoặc chạm vào thông báo thì mở bảng nhập,
+// nút "Xem hôm nay" thì mở danh sách. App đang mở thì đưa lên trước, chưa mở thì mở mới.
+self.addEventListener('notificationclick', (e) => {
+  const xem = e.action === 'xem';
+  e.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const win = all.find((c) => new URL(c.url).origin === self.location.origin);
+    if (win) {
+      await win.focus();
+      win.postMessage(xem ? 'mo-ds' : 'mo-them');
+      return;
+    }
+    await self.clients.openWindow(xem ? '/#ds' : '/?them');
+  })());
 });
 
 self.addEventListener('fetch', (e) => {

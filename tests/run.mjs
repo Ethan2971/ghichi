@@ -316,6 +316,9 @@ await test('GC-PWA: sw.js cùng phiên bản app, tải sẵn đủ mọi file, 
   assert.equal(man.display, 'standalone');
   for (const ic of man.icons) assert.ok(fs.existsSync(new URL(`..${ic.src}`, import.meta.url)), ic.src);
   assert.ok(man.icons.some((i) => i.purpose === 'maskable'));
+  assert.equal(man.name, 'GhiChi');
+  assert.ok(fs.existsSync(new URL('../icons/badge-96.png', import.meta.url)) && sw.includes("'/icons/badge-96.png'"), 'thiếu biểu tượng nhỏ cho thanh thông báo');
+  assert.ok(sw.includes("'notificationclick'"), 'sw.js phải xử lý bấm vào thông báo');
 });
 
 for (const [s, n] of results) console.log(s + n);
