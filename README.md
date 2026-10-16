@@ -19,6 +19,8 @@ node tests/run.mjs
 
 ## Mã module (mỗi file mở đầu bằng mã của nó)
 
+Cách gọi mã để sửa từng phần: xem [MODULES.md](MODULES.md).
+
 | Mã | File | Trạng thái |
 | --- | --- | --- |
 | GC-DATA | js/data.js | Xong (v0.1) |
