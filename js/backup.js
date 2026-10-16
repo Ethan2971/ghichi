@@ -1,11 +1,16 @@
 // GC-SAOLUU — Sao lưu: tải file JSON về máy, gửi file qua Zalo (nếu máy hỗ trợ chia sẻ),
 // khôi phục máy này từ file sao lưu. Hiện ở nhóm "Sao lưu" trong tab Cài đặt.
-// Lượt 1 (v0.5): tải xuống, tải lên. Lượt 2 (v0.8): nhắc sao lưu.
+// Lượt 1 (v0.5): tải xuống, tải lên. Lượt 2 (v0.8): nhắc sao lưu khi lâu chưa tải file mà máy có khoản mới,
+// hiện thành dải nhắc trên cùng màn hình; chọn được nhắc mỗi tuần, mỗi tháng hoặc tắt.
 // Gộp file của người khác vào sổ chính là việc của GC-GOP (v0.8), không làm ở đây.
 
 import * as luu from './storage.js';
 import { esc, icon, toast, fmtNumber } from './ui.js';
 import { toDateStr } from './data.js';
+
+const REMIND_OPTIONS = [[7, 'Mỗi tuần'], [30, 'Mỗi tháng'], [0, 'Tắt']];
+const DEFAULT_REMIND = 7; // ngày
+const SNOOZE_DAYS = 2;    // bấm "Để sau" thì 2 ngày nữa mới nhắc lại
 
 let host = null;
 let sheet = null;
@@ -39,6 +44,12 @@ export async function mountBackup(el) {
       </button>
       <input type="file" accept=".json,application/json" data-bk-file hidden>
     </div>
+    <div class="bk-remind">
+      <span>${icon('notifications', 'tiny')}Nhắc sao lưu</span>
+      <div class="segmented bk-seg" role="radiogroup" aria-label="Nhắc sao lưu">
+        ${REMIND_OPTIONS.map(([v, label]) => `<button type="button" role="radio" data-remind="${v}" aria-checked="${(settings.nhacSaoLuu ?? DEFAULT_REMIND) === v}">${label}</button>`).join('')}
+      </div>
+    </div>
     <p class="bk-help">File sao lưu chứa mọi khoản chi, danh mục, thành viên trên máy này. Hãy cất ở nơi khác máy (Zalo Cloud, Google Drive, email) để không mất khi đổi máy.</p>`;
   host.onclick = onClick;
   host.querySelector('[data-bk-file]').onchange = onFile;
@@ -70,6 +81,8 @@ export async function buildFile() {
 }
 
 async function onClick(e) {
+  const r = e.target.closest('[data-remind]');
+  if (r) { await luu.setSettings({ nhacSaoLuu: Number(r.dataset.remind), hoanNhacDen: null }); checkReminder(); return; }
   const b = e.target.closest('[data-bk]');
   if (!b) return;
   const act = b.dataset.bk;
@@ -197,4 +210,76 @@ function closeSheet(fromBack = false) {
   sheet.close();
   pending = null;
   if (!fromBack && history.state?.bk) history.back();
+}
+
+// ---------- Nhắc sao lưu ----------
+
+// Cần nhắc không? Trả về { days, changes } hoặc null.
+// Mốc tính từ lần sao lưu cuối (chưa sao lưu thì từ lúc bắt đầu dùng máy). Chỉ nhắc khi có khoản thêm hoặc sửa sau mốc.
+export function backupReminder(settings, khoanChi, now = new Date()) {
+  const every = settings.nhacSaoLuu ?? DEFAULT_REMIND;
+  if (!every) return null;
+  if (settings.hoanNhacDen && now < new Date(settings.hoanNhacDen)) return null;
+  const since = settings.lanSaoLuuCuoi
+    ?? settings.taoLuc
+    ?? khoanChi.reduce((min, k) => (!min || k.taoLuc < min ? k.taoLuc : min), null);
+  if (!since) return null;
+  const days = Math.floor((now - new Date(since)) / 864e5);
+  if (days < every) return null;
+  const changes = khoanChi.filter((k) => (k.suaLuc ?? k.taoLuc) > since).length;
+  return changes ? { days, changes, never: !settings.lanSaoLuuCuoi } : null;
+}
+
+let banner = null;
+
+// Gọi một lần lúc mở app (app.js). Không nhắc ở chế độ xem thử.
+export function initBackupReminder() {
+  if (luu.storageMode() === 'demo') return;
+  luu.store.addEventListener('dulieu-doi', (e) => { if (e.detail.table === 'caiDat' || e.detail.table === '*') checkReminder(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkReminder(); });
+  checkReminder();
+}
+
+async function checkReminder() {
+  if (luu.storageMode() === 'demo') return;
+  const [settings, khoanChi] = await Promise.all([luu.getSettings(), luu.list('khoanChi', { includeDeleted: true })]);
+  const need = backupReminder(settings, khoanChi);
+  if (!need) { hideBanner(); return; }
+  showBanner(need);
+}
+
+function showBanner({ days, changes, never }) {
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.className = 'bk-banner';
+    banner.setAttribute('role', 'status');
+    banner.addEventListener('click', onBannerClick);
+    document.body.append(banner);
+  }
+  banner.innerHTML = `
+    <span class="bk-banner-ic">${icon('cloud_upload')}</span>
+    <span class="bk-banner-text"><b>${never ? 'Chưa sao lưu lần nào' : `Đã ${days} ngày chưa sao lưu`}</b>
+      <small>${fmtNumber(changes)} khoản mới chưa có trong file sao lưu</small></span>
+    <button type="button" class="bk-banner-later" data-later>Để sau</button>
+    <button type="button" class="btn btn-primary bk-banner-go" data-go>${canShare() ? 'Gửi' : 'Tải'}</button>`;
+  banner.hidden = false;
+}
+
+function hideBanner() {
+  if (banner) banner.hidden = true;
+}
+
+async function onBannerClick(e) {
+  const b = e.target.closest('button');
+  if (!b) return;
+  try {
+    if (b.hasAttribute('data-later')) {
+      await luu.setSettings({ hoanNhacDen: new Date(Date.now() + SNOOZE_DAYS * 864e5).toISOString() });
+    } else if (b.hasAttribute('data-go')) {
+      if (canShare()) await share();
+      else await download();
+    }
+  } catch (err) {
+    if (err?.name !== 'AbortError') toast(`Chưa làm được: ${err.message}`, { ms: 6000 });
+  }
 }

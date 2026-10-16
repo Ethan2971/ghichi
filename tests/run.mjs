@@ -286,6 +286,20 @@ await test('GC-GOP: thêm, sửa, xoá theo máy ghi, không ghi đè khoản c�
   assert.equal((await luu.list('khoanChi')).some((k) => k.id === moi.id), true);
 });
 
+await test('GC-SAOLUU: nhắc sao lưu khi quá hạn và có khoản mới, hoãn, tắt', async () => {
+  const { backupReminder } = await import('../js/backup.js');
+  const now = new Date('2026-10-16T09:00:00+07:00');
+  const k = (t) => ({ taoLuc: t, suaLuc: t });
+  const rows = [k('2026-10-01T08:00:00+07:00'), k('2026-10-12T08:00:00+07:00')];
+  assert.deepEqual(backupReminder({ lanSaoLuuCuoi: '2026-10-05T08:00:00+07:00' }, rows, now), { days: 11, changes: 1, never: false });
+  assert.equal(backupReminder({ lanSaoLuuCuoi: '2026-10-13T08:00:00+07:00' }, rows, now), null); // chưa tới 7 ngày
+  assert.equal(backupReminder({ lanSaoLuuCuoi: '2026-10-01T09:00:00+07:00' }, [k('2026-09-01T08:00:00+07:00')], now), null); // không có gì mới
+  assert.equal(backupReminder({ lanSaoLuuCuoi: '2026-10-05T08:00:00+07:00', nhacSaoLuu: 30 }, rows, now), null);
+  assert.equal(backupReminder({ lanSaoLuuCuoi: '2026-10-05T08:00:00+07:00', nhacSaoLuu: 0 }, rows, now), null);
+  assert.equal(backupReminder({ lanSaoLuuCuoi: '2026-10-05T08:00:00+07:00', hoanNhacDen: '2026-10-17T00:00:00+07:00' }, rows, now), null);
+  assert.deepEqual(backupReminder({ lanSaoLuuCuoi: null, taoLuc: '2026-09-30T08:00:00+07:00' }, rows, now), { days: 16, changes: 2, never: true });
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);

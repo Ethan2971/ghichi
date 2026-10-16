@@ -36,4 +36,4 @@ Cách gọi mã để sửa từng phần: xem [MODULES.md](MODULES.md).
 | GC-GOP | js/merge.js, css/merge.css | Xong (v0.8) |
 | GC-CAIDAT | js/screen-caidat.js, css/caidat.css | Xong (v0.5) |
 | GC-CHAO | js/welcome.js, css/welcome.css | Xong (v0.5) |
-| GC-SAOLUU | js/backup.js, css/backup.css | Lượt 1 xong (v0.5): tải, gửi, khôi phục file JSON. v0.8: nhắc sao lưu |
+| GC-SAOLUU | js/backup.js, css/backup.css | Xong (v0.8): tải, gửi, khôi phục file JSON, nhắc sao lưu |

@@ -7,6 +7,7 @@ import { initFab } from './fab.js';
 import { initDs } from './screen-ds.js';
 import { initTk } from './screen-tk.js';
 import { initBudget } from './budget.js';
+import { initBackupReminder } from './backup.js';
 import { initCaiDat } from './screen-caidat.js';
 import { needsWelcome, runWelcome } from './welcome.js';
 import { applyTheme, esc, toast } from './ui.js';
@@ -24,6 +25,7 @@ try {
   await initCaiDat(document.getElementById('tab-caidat'));
   initFab();
   initBudget();
+  initBackupReminder();
 
   const mode = luu.storageMode();
   if (mode === 'memory') toast('Máy này không cho lưu dữ liệu (có thể do chế độ ẩn danh). Tải lại trang sẽ mất.', { ms: 8000 });
