@@ -152,6 +152,16 @@ await test('GC-FORM: hiển thị biểu thức có dấu chấm nghìn', () => 
   assert.equal(calc.formatExpr('1,2345'), '1,2345');
 });
 
+await test('GC-DATA: giờ phút không bắt buộc, sai dạng thì báo lỗi', () => {
+  assert.ok(data.isValidTime('07:30'));
+  assert.ok(!data.isValidTime('24:00'));
+  assert.ok(!data.isValidTime('7:30'));
+  const ok = data.createExpense({ ngay: '2026-10-16', soTien: 1000, danhMucId: 'dm_khac', nguoiChiId: 'tv_bo' }, 'may_bo');
+  assert.equal(ok.gio, '');
+  assert.deepEqual(data.validate('khoanChi', ok), []);
+  assert.ok(data.validate('khoanChi', { ...ok, gio: '25:00' }).some((e) => e.includes('Giờ')));
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);

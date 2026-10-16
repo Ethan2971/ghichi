@@ -61,7 +61,8 @@ async function render() {
   const thisMonth = today.slice(0, 7);
   const rows = khoanChi
     .filter((k) => k.ngay.startsWith(month))
-    .sort((a, b) => b.ngay.localeCompare(a.ngay) || b.taoLuc.localeCompare(a.taoLuc));
+    .sort((a, b) => b.ngay.localeCompare(a.ngay) || (b.gio || '').localeCompare(a.gio || '')
+      || b.taoLuc.localeCompare(a.taoLuc));
 
   const total = rows.reduce((t, k) => t + k.soTien, 0);
   const todayTotal = rows.filter((k) => k.ngay === today).reduce((t, k) => t + k.soTien, 0);
@@ -115,7 +116,7 @@ function rowHtml(k, cats, members, devices, device) {
   const m = members[k.nguoiChiId];
   const catName = c.an ? `${c.ten} (đã ẩn)` : c.ten;
   const title = k.ghiChu || catName;
-  const parts = [k.ghiChu ? catName : null, m?.ten].filter(Boolean);
+  const parts = [k.gio || null, k.ghiChu ? catName : null, m?.ten].filter(Boolean);
   const mine = k.mayGhiId === device.id;
   return `
     <li>

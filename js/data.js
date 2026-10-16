@@ -78,6 +78,15 @@ export function isValidDate(s) {
   return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
 }
 
+// Giờ phút dạng "HH:MM" theo giờ máy, ví dụ "07:30".
+export function nowTimeStr(date = new Date()) {
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export function isValidTime(s) {
+  return typeof s === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
+}
+
 export function isValidMonth(s) {
   return typeof s === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(s);
 }
@@ -108,11 +117,13 @@ export function createCategory({ ten, icon = 'label', mau = '#64748B', thuTu = 1
   return { id: newId('dm'), ten, icon, mau, thuTu, an: false, mayTaoId: deviceId, suaLuc: nowIso() };
 }
 
-export function createExpense({ ngay, soTien, danhMucId, nguoiChiId, ghiChu = '' }, deviceId) {
+// gio: "HH:MM", không bắt buộc (chuỗi rỗng nghĩa là không ghi giờ).
+export function createExpense({ ngay, gio = '', soTien, danhMucId, nguoiChiId, ghiChu = '' }, deviceId) {
   const t = nowIso();
   return {
     id: newId('k'),
     ngay,
+    gio,
     soTien,
     danhMucId,
     nguoiChiId,
@@ -168,6 +179,7 @@ export function validate(table, r) {
   switch (table) {
     case 'khoanChi':
       if (!isValidDate(r.ngay)) errors.push('Ngày phải có dạng YYYY-MM-DD');
+      if (r.gio && !isValidTime(r.gio)) errors.push('Giờ phải có dạng HH:MM');
       if (!Number.isInteger(r.soTien) || r.soTien <= 0) errors.push('Số tiền phải là số nguyên lớn hơn 0');
       if (!isNonEmpty(r.danhMucId)) errors.push('Thiếu danh mục');
       if (!isNonEmpty(r.nguoiChiId)) errors.push('Thiếu người chi');

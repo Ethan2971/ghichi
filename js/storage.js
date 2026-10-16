@@ -145,8 +145,10 @@ function buildFakeData(seed) {
 
   const today = new Date();
   const addExpense = (date, catId, amountK, note, payerId, deviceId) => {
+    const minutes = 6 * 60 + Math.floor(rand() * 16 * 60);
     const e = createExpense({
       ngay: toDateStr(date),
+      gio: `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`,
       soTien: amountK * 1000,
       danhMucId: catId,
       nguoiChiId: payerId,

@@ -3,7 +3,7 @@
 // Đọc ghi qua GC-LUU; sau khi lưu, GC-LUU phát sự kiện 'dulieu-doi' để danh sách tự cập nhật.
 
 import * as luu from './storage.js';
-import { createExpense, canEdit, todayStr } from './data.js';
+import { createExpense, canEdit, todayStr, nowTimeStr } from './data.js';
 import { esc, icon, fmtNumber, addDays, toast } from './ui.js';
 import { press, evaluate, hasOperator, formatExpr, fromAmount } from './calc.js';
 
@@ -15,11 +15,26 @@ const KEYS = [
   ['1', '1'], ['2', '2'], ['3', '3'], ['+', '+', 'op'],
   ['000', '000'], ['0', '0'], [',', ','], ['back', 'backspace', 'icon'],
 ];
+// Gợi ý ghi chú sẵn cho danh mục mặc định, dùng khi máy chưa có nhiều lịch sử.
+const DEFAULT_NOTES = {
+  dm_an_uong: ['Ăn sáng', 'Ăn trưa', 'Ăn tối', 'Cà phê', 'Trà sữa'],
+  dm_di_cho: ['Chợ sáng', 'Siêu thị', 'Rau củ', 'Thịt cá', 'Trái cây'],
+  dm_dien_nuoc: ['Tiền điện', 'Tiền nước', 'Internet', 'Gas'],
+  dm_xang_xe: ['Đổ xăng', 'Gửi xe', 'Sửa xe', 'Rửa xe'],
+  dm_hoc_tap: ['Học phí', 'Học thêm', 'Sách vở', 'Đồ dùng học tập'],
+  dm_suc_khoe: ['Thuốc', 'Khám bệnh', 'Vitamin'],
+  dm_mua_sam: ['Quần áo', 'Giày dép', 'Đồ gia dụng', 'Mỹ phẩm'],
+  dm_giai_tri: ['Xem phim', 'Đi chơi', 'Du lịch'],
+  dm_hieu_hi: ['Đám cưới', 'Đám giỗ', 'Mừng sinh nhật', 'Thăm ốm'],
+  dm_khac: [],
+};
+const MAX_HINTS = 8;
+
 const KEYBOARD = { '/': '÷', '*': '×', x: '×', '-': '−', '+': '+', '.': ',', ',': ',', '(': '(', ')': ')',
   Backspace: 'back', Delete: 'clear', Escape: null };
 
 let dialog = null;
-let state = null; // { mode: 'them' | 'sua' | 'xem', record, device, expr, danhMucId, nguoiChiId, ngay }
+let state = null; // { mode, record, device, expr, danhMucId, nguoiChiId, ngay, gio, notes }
 
 function build() {
   dialog = document.createElement('dialog');
@@ -41,7 +56,7 @@ function build() {
           <span class="f-expr num"></span>
           <span class="amount-line">
             <span class="f-sotien num">0</span><span class="currency">₫</span>
-            <span class="calc-hint">${icon('calculate')}</span>
+            <span class="calc-hint" aria-hidden="true">${icon('calculate')}</span>
           </span>
         </button>
 
@@ -60,23 +75,27 @@ function build() {
           <div class="cat-grid" role="radiogroup" aria-label="Danh mục"></div>
         </section>
 
-        <section>
+        <section class="inline-row">
           <h3>Ai chi</h3>
           <div class="chips f-nguoichi" role="radiogroup" aria-label="Ai chi"></div>
         </section>
 
         <section>
-          <h3>Ngày</h3>
+          <h3>Ngày giờ</h3>
           <div class="chips f-ngay">
             <button type="button" class="chip" data-ngay="0">Hôm nay</button>
             <button type="button" class="chip" data-ngay="-1">Hôm qua</button>
             <label class="chip date-chip">${icon('calendar_month')}<input type="date" id="f-ngay" aria-label="Chọn ngày"></label>
+            <label class="chip date-chip time-chip">${icon('schedule')}<input type="time" id="f-gio" aria-label="Chọn giờ"></label>
           </div>
         </section>
 
-        <div class="field">
-          <input id="f-ghichu" placeholder=" " maxlength="120" autocomplete="off">
-          <label for="f-ghichu">Ghi chú (không bắt buộc)</label>
+        <div class="note-box">
+          <div class="field">
+            <input id="f-ghichu" placeholder=" " maxlength="120" autocomplete="off" enterkeyhint="done">
+            <label for="f-ghichu">Ghi chú (không bắt buộc)</label>
+          </div>
+          <div class="chips f-goiy" hidden aria-label="Gợi ý ghi chú"></div>
         </div>
 
         <p class="f-error" role="alert"></p>
@@ -92,6 +111,14 @@ function build() {
   form.addEventListener('submit', (e) => { e.preventDefault(); save(); });
   form.addEventListener('click', onClick);
   dialog.addEventListener('keydown', onKeydown);
+  form.querySelector('#f-gio').addEventListener('change', (e) => { state.gio = e.target.value; });
+  const note = form.querySelector('#f-ghichu');
+  note.addEventListener('focus', paintHints);
+  note.addEventListener('input', paintHints);
+  note.addEventListener('blur', () => { dialog.querySelector('.f-goiy').hidden = true; });
+  note.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); note.blur(); } });
+  // Giữ ô ghi chú đang gõ khi chạm vào gợi ý.
+  form.querySelector('.f-goiy').addEventListener('pointerdown', (e) => e.preventDefault());
   form.querySelector('#f-ngay').addEventListener('change', (e) => {
     if (e.target.value) setNgay(e.target.value);
   });
@@ -112,9 +139,10 @@ function onClick(e) {
   if (btn.dataset.act === 'dong') return close();
   if (btn.dataset.act === 'xoa') return removeRecord();
   if (state.mode === 'xem') return;
-  if (btn.dataset.act === 'may-tinh') return toggleCalc(true);
+  if (btn.dataset.act === 'may-tinh') return calcOpen() ? closeCalc() : toggleCalc(true);
   if (btn.dataset.act === 'ap-dung') return applyCalc();
   if (btn.dataset.key) return pressKey(btn.dataset.key);
+  if (btn.dataset.hint !== undefined) return pickHint(btn);
   if (btn.dataset.cat) { state.danhMucId = btn.dataset.cat; return paintChoices(); }
   if (btn.dataset.member) { state.nguoiChiId = btn.dataset.member; return paintChoices(); }
   if (btn.dataset.ngay) return setNgay(addDays(todayStr(), Number(btn.dataset.ngay)));
@@ -176,6 +204,14 @@ function applyCalc() {
   return true;
 }
 
+// Thu máy tính bằng icon: giữ kết quả nếu tính được, không báo lỗi khi còn trống.
+function closeCalc() {
+  const v = currentAmount();
+  if (v !== null && v > 0) state.expr = fromAmount(v);
+  paintAmount();
+  toggleCalc(false);
+}
+
 // Bàn phím máy tính (khi dùng trên máy tính để bàn).
 function onKeydown(e) {
   if (!state || !calcOpen() || e.target.matches('input, textarea')) return;
@@ -183,6 +219,57 @@ function onKeydown(e) {
   if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); e.key === 'Enter' ? applyCalc() : pressKey('='); return; }
   const key = /^\d$/.test(e.key) ? e.key : KEYBOARD[e.key];
   if (key) { e.preventDefault(); pressKey(key); }
+}
+
+// ---------- Gợi ý ghi chú ----------
+
+// Bỏ dấu tiếng Việt để tìm "pho" vẫn ra "Phở".
+const fold = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+
+// Gom ghi chú đã dùng: { text, danhMucId, count, last }.
+async function loadNotes() {
+  const rows = await luu.list('khoanChi');
+  const map = new Map();
+  for (const k of rows) {
+    const text = k.ghiChu?.trim();
+    if (!text) continue;
+    const key = fold(text);
+    const cur = map.get(key) ?? { text, danhMucId: k.danhMucId, count: 0, last: '' };
+    cur.count += 1;
+    const when = `${k.ngay} ${k.gio || ''}`;
+    if (when >= cur.last) { cur.last = when; cur.danhMucId = k.danhMucId; cur.text = text; }
+    map.set(key, cur);
+  }
+  for (const [catId, list] of Object.entries(DEFAULT_NOTES)) {
+    for (const text of list) {
+      if (!map.has(fold(text))) map.set(fold(text), { text, danhMucId: catId, count: 0, last: '' });
+    }
+  }
+  return [...map.values()];
+}
+
+function paintHints() {
+  const box = dialog.querySelector('.f-goiy');
+  if (!state || state.mode === 'xem') { box.hidden = true; return; }
+  const typed = fold(dialog.querySelector('#f-ghichu').value.trim());
+  const cat = state.danhMucId;
+  const list = state.notes
+    .filter((n) => (!cat || n.danhMucId === cat || typed) && fold(n.text).includes(typed) && fold(n.text) !== typed)
+    .sort((a, b) => (b.danhMucId === cat) - (a.danhMucId === cat) || b.count - a.count || b.last.localeCompare(a.last))
+    .slice(0, MAX_HINTS);
+  box.innerHTML = list.map((n) => `
+    <button type="button" class="chip hint" data-hint="${esc(n.text)}" data-hint-cat="${esc(n.danhMucId)}">${esc(n.text)}</button>`).join('');
+  box.hidden = list.length === 0;
+}
+
+// Chọn gợi ý: điền ghi chú; nếu chưa chọn danh mục thì chọn luôn danh mục của gợi ý.
+function pickHint(btn) {
+  dialog.querySelector('#f-ghichu').value = btn.dataset.hint;
+  if (!state.danhMucId && dialog.querySelector(`[data-cat="${CSS.escape(btn.dataset.hintCat)}"]`)) {
+    state.danhMucId = btn.dataset.hintCat;
+    paintChoices();
+  }
+  dialog.querySelector('#f-ghichu').blur();
 }
 
 // ---------- Ngày ----------
@@ -249,6 +336,8 @@ export async function openForm({ id } = {}) {
     danhMucId: record?.danhMucId ?? null,
     nguoiChiId: record?.nguoiChiId ?? device.chuMayId,
     ngay: record?.ngay ?? todayStr(),
+    gio: record ? (record.gio ?? '') : nowTimeStr(),
+    notes: await loadNotes(),
   };
 
   dialog.querySelector('#f-title').textContent =
@@ -267,6 +356,8 @@ export async function openForm({ id } = {}) {
   paintAmount();
   dialog.querySelector('#f-ghichu').value = record?.ghiChu ?? '';
   dialog.querySelector('#f-ngay').value = state.ngay;
+  dialog.querySelector('#f-gio').value = state.gio;
+  dialog.querySelector('.f-goiy').hidden = true;
   for (const el of dialog.querySelectorAll('input, .cat, [data-member], [data-ngay], .amount-box')) {
     el.disabled = mode === 'xem';
   }
@@ -322,6 +413,7 @@ async function save() {
 
   const fields = {
     ngay: state.ngay,
+    gio: state.gio,
     soTien,
     danhMucId: state.danhMucId,
     nguoiChiId: state.nguoiChiId,
