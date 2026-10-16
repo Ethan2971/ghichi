@@ -6,6 +6,10 @@ import * as luu from './storage.js';
 import { createExpense, canEdit, todayStr, nowTimeStr } from './data.js';
 import { esc, icon, fmtNumber, addDays, toast } from './ui.js';
 import { press, evaluate, hasOperator, formatExpr, fromAmount } from './calc.js';
+import { pickDate, pickTime, isPickerOpen, closePicker, shortDate } from './picker.js';
+
+const DEFAULT_CATEGORY = 'dm_di_cho';
+const TIME_STEP = 15; // phút, cho nút mũi tên của giờ
 
 // Bàn phím máy tính: [phím, nhãn, kiểu]
 const KEYS = [
@@ -89,10 +93,21 @@ function build() {
         <section>
           <h3>Ngày giờ</h3>
           <div class="chips f-ngay">
-            <button type="button" class="chip" data-ngay="0">Hôm nay</button>
             <button type="button" class="chip" data-ngay="-1">Hôm qua</button>
-            <label class="chip date-chip">${icon('calendar_month')}<input type="date" id="f-ngay" aria-label="Chọn ngày"></label>
-            <label class="chip date-chip time-chip">${icon('schedule')}<input type="time" id="f-gio" aria-label="Chọn giờ"></label>
+            <button type="button" class="chip" data-ngay="0">Hôm nay</button>
+            <button type="button" class="chip" data-ngay="1">Ngày mai</button>
+          </div>
+          <div class="dt-row">
+            <div class="stepper stepper-date">
+              <button type="button" class="step" data-step="ngay" data-dir="-1" aria-label="Ngày trước">${icon('chevron_left')}</button>
+              <button type="button" class="step-value" data-pick="ngay">${icon('calendar_month')}<span class="f-ngay-text num"></span></button>
+              <button type="button" class="step" data-step="ngay" data-dir="1" aria-label="Ngày sau">${icon('chevron_right')}</button>
+            </div>
+            <div class="stepper stepper-time">
+              <button type="button" class="step" data-step="gio" data-dir="-1" aria-label="Lùi ${TIME_STEP} phút">${icon('chevron_left')}</button>
+              <button type="button" class="step-value" data-pick="gio">${icon('schedule')}<span class="f-gio-text num"></span></button>
+              <button type="button" class="step" data-step="gio" data-dir="1" aria-label="Tiến ${TIME_STEP} phút">${icon('chevron_right')}</button>
+            </div>
           </div>
         </section>
 
@@ -117,7 +132,6 @@ function build() {
   form.addEventListener('submit', (e) => { e.preventDefault(); save(); });
   form.addEventListener('click', onClick);
   dialog.addEventListener('keydown', onKeydown);
-  form.querySelector('#f-gio').addEventListener('change', (e) => { state.gio = e.target.value; });
   const note = form.querySelector('#f-ghichu');
   note.addEventListener('focus', paintHints);
   note.addEventListener('input', paintHints);
@@ -125,14 +139,11 @@ function build() {
   note.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); note.blur(); } });
   // Giữ ô ghi chú đang gõ khi chạm vào gợi ý.
   form.querySelector('.f-goiy').addEventListener('pointerdown', (e) => e.preventDefault());
-  form.querySelector('#f-ngay').addEventListener('change', (e) => {
-    if (e.target.value) setNgay(e.target.value);
-  });
 
   // Bấm ra ngoài bảng thì đóng.
   dialog.addEventListener('click', (e) => { if (e.target === dialog) close(); });
   // Phím Esc: tự đóng theo cách của mình để dọn lịch sử.
-  dialog.addEventListener('cancel', (e) => { e.preventDefault(); close(); });
+  dialog.addEventListener('cancel', (e) => { e.preventDefault(); isPickerOpen() ? closePicker() : close(); });
   // Nút Quay lại trên Android: đóng bảng thay vì rời trang.
   window.addEventListener('popstate', () => {
     if (dialog.open && !history.state?.sheet) finishClose();
@@ -150,9 +161,13 @@ function onClick(e) {
   if (btn.dataset.key) return pressKey(btn.dataset.key);
   if (btn.dataset.add) return quickAdd(Number(btn.dataset.add));
   if (btn.dataset.hint !== undefined) return pickHint(btn);
-  if (btn.dataset.cat) { state.danhMucId = btn.dataset.cat; return paintChoices(); }
+  if (btn.dataset.cat) { state.danhMucId = btn.dataset.cat; state.catTouched = true; return paintChoices(); }
   if (btn.dataset.member) { state.nguoiChiId = btn.dataset.member; return paintChoices(); }
   if (btn.dataset.ngay) return setNgay(addDays(todayStr(), Number(btn.dataset.ngay)));
+  if (btn.dataset.step === 'ngay') return setNgay(addDays(state.ngay, Number(btn.dataset.dir)));
+  if (btn.dataset.step === 'gio') return setGio(shiftTime(state.gio || nowTimeStr(), Number(btn.dataset.dir) * TIME_STEP));
+  if (btn.dataset.pick === 'ngay') return pickDate(dialog, state.ngay).then((v) => v && state && setNgay(v));
+  if (btn.dataset.pick === 'gio') return pickTime(dialog, state.gio).then((v) => v && state && setGio(v));
 }
 
 // ---------- Số tiền và máy tính ----------
@@ -277,10 +292,10 @@ function paintHints() {
   box.hidden = list.length === 0;
 }
 
-// Chọn gợi ý: điền ghi chú; nếu chưa chọn danh mục thì chọn luôn danh mục của gợi ý.
+// Chọn gợi ý: điền ghi chú; nếu người dùng chưa tự chọn danh mục thì chọn theo gợi ý.
 function pickHint(btn) {
   dialog.querySelector('#f-ghichu').value = btn.dataset.hint;
-  if (!state.danhMucId && dialog.querySelector(`[data-cat="${CSS.escape(btn.dataset.hintCat)}"]`)) {
+  if (!state.catTouched && dialog.querySelector(`[data-cat="${CSS.escape(btn.dataset.hintCat)}"]`)) {
     state.danhMucId = btn.dataset.hintCat;
     paintChoices();
   }
@@ -291,8 +306,23 @@ function pickHint(btn) {
 
 function setNgay(ngay) {
   state.ngay = ngay;
-  dialog.querySelector('#f-ngay').value = ngay;
   paintChoices();
+}
+
+function setGio(gio) {
+  state.gio = gio;
+  paintChoices();
+}
+
+// Lùi hoặc tiến tới mốc giờ chẵn kế tiếp (bước TIME_STEP phút), vòng trong ngày.
+// Ví dụ bước 15: 06:37 tiến -> 06:45, lùi -> 06:30; 23:50 tiến -> 00:00.
+export function shiftTime(gio, minutes) {
+  const step = Math.abs(minutes);
+  const [h, m] = gio.split(':').map(Number);
+  const t0 = h * 60 + m;
+  const t = minutes > 0 ? Math.floor(t0 / step) * step + step : Math.ceil(t0 / step) * step - step;
+  const w = ((t % 1440) + 1440) % 1440;
+  return `${String(Math.floor(w / 60)).padStart(2, '0')}:${String(w % 60).padStart(2, '0')}`;
 }
 
 // ---------- Vẽ các lựa chọn ----------
@@ -327,14 +357,11 @@ function paintChoices() {
     b.setAttribute('aria-checked', String(b.dataset.member === state.nguoiChiId));
   }
   const today = todayStr();
-  const quick = { 0: today, '-1': addDays(today, -1) };
-  let matched = false;
   for (const b of dialog.querySelectorAll('[data-ngay]')) {
-    const on = quick[b.dataset.ngay] === state.ngay;
-    matched ||= on;
-    b.setAttribute('aria-pressed', String(on));
+    b.setAttribute('aria-pressed', String(addDays(today, Number(b.dataset.ngay)) === state.ngay));
   }
-  dialog.querySelector('.date-chip').setAttribute('aria-pressed', String(!matched));
+  dialog.querySelector('.f-ngay-text').textContent = shortDate(state.ngay);
+  dialog.querySelector('.f-gio-text').textContent = state.gio || '--:--';
   clearError();
 }
 
@@ -351,7 +378,8 @@ export async function openForm({ id } = {}) {
   const mode = !record ? 'them' : canEdit('khoanChi', record, device) ? 'sua' : 'xem';
   state = {
     mode, record, device,
-    danhMucId: record?.danhMucId ?? null,
+    danhMucId: record?.danhMucId ?? DEFAULT_CATEGORY,
+    catTouched: !!record,
     nguoiChiId: record?.nguoiChiId ?? device.chuMayId,
     ngay: record?.ngay ?? todayStr(),
     gio: record ? (record.gio ?? '') : nowTimeStr(),
@@ -373,10 +401,8 @@ export async function openForm({ id } = {}) {
   state.expr = fromAmount(record?.soTien ?? 0);
   paintAmount();
   dialog.querySelector('#f-ghichu').value = record?.ghiChu ?? '';
-  dialog.querySelector('#f-ngay').value = state.ngay;
-  dialog.querySelector('#f-gio').value = state.gio;
   dialog.querySelector('.f-goiy').hidden = true;
-  for (const el of dialog.querySelectorAll('input, .cat, [data-member], [data-ngay], .amount-box, [data-add]')) {
+  for (const el of dialog.querySelectorAll('input, .cat, [data-member], [data-ngay], .amount-box, [data-add], [data-step], [data-pick]')) {
     el.disabled = mode === 'xem';
   }
   paintChoices();

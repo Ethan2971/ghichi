@@ -3,7 +3,7 @@
 .month-card { padding: 8px 8px 16px; margin-bottom: 8px; text-align: center; }
 .month-nav { display: flex; align-items: center; justify-content: space-between; }
 .month-nav h2 { font-size: var(--fs-m); font-weight: 600; color: var(--text-2); }
-.month-total { margin: 2px 0 6px; font-size: var(--fs-xl); font-weight: 800; letter-spacing: -0.01em; }
+.month-total { color: var(--expense); margin: 2px 0 6px; font-size: var(--fs-xl); font-weight: 800; letter-spacing: -0.01em; }
 .month-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; color: var(--text-3); font-size: var(--fs-s); }
 .month-stats b { color: var(--text-2); font-weight: 600; }
 
@@ -14,6 +14,7 @@
   background: var(--bg);
   font-size: var(--fs-s); font-weight: 600; color: var(--text-2);
 }
+.day-head .num { color: var(--expense); }
 
 .rows { list-style: none; margin: 0; padding: 0; overflow: hidden; }
 .rows li + li .row { border-top: 1px solid var(--border); }
@@ -36,7 +37,7 @@
 .row-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row-sub { color: var(--text-3); font-size: var(--fs-s); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row-sub .icon.tiny { font-size: 14px; vertical-align: -2px; margin-right: 2px; }
-.row-amount { flex: none; font-weight: 700; }
+.row-amount { flex: none; font-weight: 700; color: var(--expense); }
 
 /* Khoản vừa thêm / sửa: tô sáng rồi mờ dần */
 .row.moi { animation: row-moi 2.2s var(--ease); }

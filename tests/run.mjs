@@ -162,6 +162,15 @@ await test('GC-DATA: giờ phút không bắt buộc, sai dạng thì báo lỗi
   assert.ok(data.validate('khoanChi', { ...ok, gio: '25:00' }).some((e) => e.includes('Giờ')));
 });
 
+await test('GC-FORM: mũi tên giờ nhảy tới mốc 15 phút, vòng qua nửa đêm', async () => {
+  const { shiftTime } = await import('../js/form.js');
+  assert.equal(shiftTime('06:37', 15), '06:45');
+  assert.equal(shiftTime('06:37', -15), '06:30');
+  assert.equal(shiftTime('06:45', 15), '07:00');
+  assert.equal(shiftTime('23:50', 15), '00:00');
+  assert.equal(shiftTime('00:00', -15), '23:45');
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);
