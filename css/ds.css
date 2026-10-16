@@ -1,20 +1,27 @@
 /* GC-DS — Màn Danh sách. */
 
-.month-card { padding: 8px 8px 16px; margin-bottom: 8px; text-align: center; }
+/* Khung tháng luôn ghim trên cùng khi kéo danh sách */
+.month-sticky {
+  position: sticky; top: 0; z-index: 6;
+  margin: 0 -16px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 4px;
+  background: var(--bg);
+}
+.month-card { padding: 4px 8px 10px; text-align: center; }
 .month-nav { display: flex; align-items: center; justify-content: space-between; }
 .month-nav h2 { font-size: var(--fs-m); font-weight: 600; color: var(--text-2); }
-.month-total { color: var(--expense); margin: 2px 0 6px; font-size: var(--fs-xl); font-weight: 800; letter-spacing: -0.01em; }
+.month-total { color: var(--expense); margin: 0 0 4px; font-size: var(--fs-xl); font-weight: 800; letter-spacing: -0.01em; }
 .month-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; color: var(--text-3); font-size: var(--fs-s); }
 .month-stats b { color: var(--text-2); font-weight: 600; }
 
 .day-head {
-  position: sticky; top: var(--appbar-h); z-index: 5;
+  position: sticky; top: var(--month-h, 0px); z-index: 5;
   display: flex; justify-content: space-between; gap: 12px;
   padding: 14px 4px 6px;
   background: var(--bg);
   font-size: var(--fs-s); font-weight: 600; color: var(--text-2);
 }
-.day-head .num { color: var(--expense); }
+.day-head .num { color: var(--expense); font-size: var(--fs-m); font-weight: 800; }
+.day-head { align-items: baseline; }
 
 .rows { list-style: none; margin: 0; padding: 0; overflow: hidden; }
 .rows li + li .row { border-top: 1px solid var(--border); }
@@ -37,7 +44,7 @@
 .row-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row-sub { color: var(--text-3); font-size: var(--fs-s); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row-sub .icon.tiny { font-size: 14px; vertical-align: -2px; margin-right: 2px; }
-.row-amount { flex: none; font-weight: 700; color: var(--expense); }
+.row-amount { flex: none; font-size: var(--fs-s); font-weight: 600; color: color-mix(in srgb, var(--expense) 70%, var(--text-3)); }
 
 /* Khoản vừa thêm / sửa: tô sáng rồi mờ dần */
 .row.moi { animation: row-moi 2.2s var(--ease); }

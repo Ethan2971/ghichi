@@ -1,21 +1,8 @@
-/* GC-NAV — Thanh tiêu đề trên cùng và thanh 3 tab dưới đáy. */
-
-.appbar {
-  position: sticky; top: 0; z-index: 20;
-  height: var(--appbar-h);
-  display: flex; align-items: center; gap: 8px;
-  padding: 0 16px;
-  padding-top: env(safe-area-inset-top, 0px);
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-.appbar h1 { font-size: var(--fs-l); font-weight: 700; flex: 1; }
-.appbar .brand { color: var(--primary-strong); font-weight: 800; font-size: var(--fs-s); letter-spacing: 0.02em; }
+/* GC-NAV — Khung trang và thanh 3 tab dưới đáy (không có thanh tiêu đề để rộng chỗ). */
 
 main {
   max-width: 640px; margin: 0 auto;
-  padding: 4px 16px calc(var(--nav-h) + var(--safe-b) + 96px);
+  padding: 0 16px calc(var(--nav-h) + var(--safe-b) + 96px);
 }
 
 .bottom-nav {

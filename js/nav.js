@@ -33,7 +33,6 @@ function render(name) {
   const changed = name !== current;
   current = name;
   const tab = TABS.find((t) => t.name === name);
-  document.getElementById('appbar-title').textContent = tab.title;
   document.title = `${tab.title} · GhiChi`;
 
   for (const t of TABS) {

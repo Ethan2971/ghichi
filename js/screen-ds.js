@@ -4,7 +4,7 @@
 
 import * as luu from './storage.js';
 import { todayStr } from './data.js';
-import { esc, icon, fmtMoney, dayLabel, monthLabel, addMonths, parseDate } from './ui.js';
+import { esc, icon, fmtMoney, dayLabel, monthLabel, addMonths, addDays, parseDate } from './ui.js';
 import { openForm } from './form.js';
 
 const HIGHLIGHT_MS = 2200;
@@ -66,6 +66,10 @@ async function render() {
 
   const total = rows.reduce((t, k) => t + k.soTien, 0);
   const todayTotal = rows.filter((k) => k.ngay === today).reduce((t, k) => t + k.soTien, 0);
+  // Tuần này: thứ Hai đến Chủ nhật chứa hôm nay (có thể vắt qua tháng trước).
+  const weekStart = addDays(today, -((parseDate(today).getDay() + 6) % 7));
+  const weekEnd = addDays(weekStart, 6);
+  const weekTotal = khoanChi.filter((k) => k.ngay >= weekStart && k.ngay <= weekEnd).reduce((t, k) => t + k.soTien, 0);
 
   const days = new Map();
   for (const k of rows) {
@@ -78,6 +82,7 @@ async function render() {
   const perDay = rows.length ? Math.round(total / daysInMonth) : 0;
 
   root.innerHTML = `
+    <div class="month-sticky">
     <section class="month-card card">
       <div class="month-nav">
         <button type="button" class="btn-icon" data-month="-1" aria-label="Tháng trước">${icon('chevron_left')}</button>
@@ -88,9 +93,14 @@ async function render() {
       <div class="month-stats">
         <span><b class="num">${rows.length}</b> khoản</span>
         <span>TB <b class="num">${fmtMoney(perDay)}</b>/ngày</span>
-        ${month === thisMonth ? `<span>Hôm nay <b class="num">${fmtMoney(todayTotal)}</b></span>` : ''}
       </div>
+      ${month === thisMonth ? `
+      <div class="month-stats">
+        <span>Hôm nay <b class="num">${fmtMoney(todayTotal)}</b></span>
+        <span>Tuần này <b class="num">${fmtMoney(weekTotal)}</b></span>
+      </div>` : ''}
     </section>
+    </div>
 
     ${rows.length ? [...days].map(([ngay, list]) => `
       <section class="day">
@@ -108,7 +118,18 @@ async function render() {
         <p>Bấm nút <b>+</b> ở góc dưới để ghi khoản đầu tiên của ${esc(monthLabel(month).toLowerCase())}.</p>
       </div>`}`;
 
+  watchStickyHeight();
   if (pendingHighlight) highlight(pendingHighlight);
+}
+
+// Tiêu đề ngày dính ngay dưới khung tháng: đo chiều cao khung tháng mỗi khi nó đổi.
+let stickyObserver = null;
+function watchStickyHeight() {
+  const el = root.querySelector('.month-sticky');
+  if (!el) return;
+  stickyObserver?.disconnect();
+  stickyObserver = new ResizeObserver(() => root.style.setProperty('--month-h', `${el.offsetHeight}px`));
+  stickyObserver.observe(el);
 }
 
 function rowHtml(k, cats, members, devices, device) {
