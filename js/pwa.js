@@ -4,7 +4,8 @@
 // initPwa() gọi một lần lúc mở app (app.js). mountInstall(el) vẽ nhóm "Ứng dụng" trong Cài đặt.
 
 import * as luu from './storage.js';
-import { toDateStr } from './data.js';
+import { toDateStr, todayStr } from './data.js';
+import { setPeriod } from './period.js';
 import { openForm } from './form.js';
 import { esc, icon, toast, fmtMoney } from './ui.js';
 import { APP_VERSION } from './version.js';
@@ -33,8 +34,10 @@ export async function initPwa() {
   if (!('serviceWorker' in navigator) || !isSecureContext) return;
   // Bấm nút "Thêm khoản chi" trên thông báo khi app đang mở: sw.js gửi tin sang đây.
   navigator.serviceWorker.addEventListener('message', (e) => {
+    // sw.js hỏi cửa sổ này có phải app đã cài không, để mở đúng app chứ không mở trình duyệt.
+    if (e.data === 'hoi-kieu') e.ports[0]?.postMessage(isStandalone());
     if (e.data === 'mo-them' && !document.querySelector('dialog[open]')) openForm();
-    if (e.data === 'mo-ds') location.hash = 'ds';
+    if (e.data === 'mo-ds') showToday();
   });
   try {
     reg = await navigator.serviceWorker.register('/sw.js');
@@ -67,6 +70,13 @@ export async function initPwa() {
     if (['khoanChi', 'caiDat', '*'].includes(e.detail?.table)) refreshQuick();
   });
   refreshQuick();
+}
+
+// "Xem hôm nay": Danh sách và Báo cáo dùng chung kỳ (period.js), đặt kỳ về Hôm nay là cả hai tab cùng đổi.
+export function showToday() {
+  setPeriod({ type: 'day', anchor: todayStr() });
+  location.hash = 'ds';
+  scrollTo(0, 0);
 }
 
 // ---------- Thông báo thêm nhanh ----------

@@ -5,7 +5,7 @@
 // Bản mới không tự thay ngay: app hỏi "Có bản mới" (js/pwa.js) rồi mới chuyển, để không mất dữ liệu đang nhập.
 // VERSION phải trùng APP_VERSION trong js/version.js (kiểm tra tự động sẽ báo nếu lệch).
 
-const VERSION = '1.0.0-dev.2';
+const VERSION = '1.0.0-dev.3';
 const APP_CACHE = `ghichi-app-${VERSION}`;
 const FONT_CACHE = 'ghichi-fonts';
 const APP_FILES = [
@@ -69,18 +69,31 @@ self.addEventListener('message', (e) => {
 });
 
 // Thông báo thêm nhanh (js/pwa.js): nút "Thêm khoản chi" hoặc chạm vào thông báo thì mở bảng nhập,
-// nút "Xem hôm nay" thì mở danh sách. App đang mở thì đưa lên trước, chưa mở thì mở mới.
+// nút "Xem hôm nay" thì đưa Danh sách và Báo cáo về hôm nay.
+// Chỉ dùng lại cửa sổ là app đã cài (hỏi từng cửa sổ qua tin 'hoi-kieu'). Không có thì mở mới:
+// điện thoại đã cài app thì đường dẫn trong phạm vi app sẽ mở bằng app, không mở trình duyệt.
+function isAppWindow(client) {
+  return new Promise((resolve) => {
+    const ch = new MessageChannel();
+    const timer = setTimeout(() => resolve(false), 400);
+    ch.port1.onmessage = (e) => { clearTimeout(timer); resolve(e.data === true); };
+    client.postMessage('hoi-kieu', [ch.port2]);
+  });
+}
+
 self.addEventListener('notificationclick', (e) => {
   const xem = e.action === 'xem';
   e.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const win = all.find((c) => new URL(c.url).origin === self.location.origin);
+    const mine = all.filter((c) => new URL(c.url).origin === self.location.origin);
+    const flags = await Promise.all(mine.map(isAppWindow));
+    const win = mine.find((c, i) => flags[i]);
     if (win) {
       await win.focus();
       win.postMessage(xem ? 'mo-ds' : 'mo-them');
-      return;
+    } else {
+      await self.clients.openWindow(xem ? '/?homnay' : '/?them');
     }
-    await self.clients.openWindow(xem ? '/#ds' : '/?them');
   })());
 });
 
