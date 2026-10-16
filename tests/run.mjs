@@ -324,6 +324,23 @@ await test('GC-PWA: sw.js cùng phiên bản app, tải sẵn đủ mọi file, 
   }
 });
 
+await test('GC-FAB: thả nút thì hít mép gần nhất, cách mép 16px, không che thanh tab', async () => {
+  const { fabBounds, snapFab, fabPlace } = await import('../js/fab.js');
+  const b = fabBounds(412, 900, 820);
+  assert.deepEqual(b, { minX: 16, maxX: 336, minY: 16, maxY: 744 });
+  assert.deepEqual(snapFab(100, 300, b).side, 'left');
+  assert.deepEqual(snapFab(250, 300, b).side, 'right');
+  assert.deepEqual(fabPlace(snapFab(5, 2000, b), b), { x: 16, y: 744 });  // kéo quá đáy: đứng trên thanh tab
+  assert.deepEqual(fabPlace(snapFab(390, -50, b), b), { x: 336, y: 16 });  // kéo quá đỉnh, mép phải
+  // Màn hình to: app rộng 640px giữa màn hình, nút bám mép của app chứ không bám mép màn hình.
+  const w = fabBounds(1440, 900, 836);
+  assert.equal(w.minX, 400 + 16);
+  assert.equal(w.maxX, 1440 - 400 - 16 - 60);
+  // Xoay màn hình: giữ tỉ lệ độ cao.
+  const p = snapFab(16, 380, b);
+  assert.equal(Math.round(fabPlace(p, fabBounds(900, 412, 348)).y), Math.round(16 + p.t * (348 - 16 - 60 - 16)));
+});
+
 for (const [s, n] of results) console.log(s + n);
 const failed = results.filter(([s]) => s.startsWith('LỖI')).length;
 console.log(`\n${results.length - failed}/${results.length} đạt`);

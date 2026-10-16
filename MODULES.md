@@ -28,7 +28,7 @@ Nếu không chắc phần đó thuộc mã nào, cứ mô tả điều thấy t
 | GC-FORM | Bảng nhập khoản chi: số tiền, máy tính nhỏ, nút cộng nhanh, danh mục, Ai chi, ngày giờ, bảng chọn ngày và giờ, ghi chú và gợi ý, nút Lưu, Xoá | js/form.js, js/calc.js, js/picker.js, css/form.css | Riêng |
 | GC-DS | Tab Danh sách: chip kỳ Hôm nay, Hôm qua, Tuần, Tháng, Năm và mũi tên chuyển kỳ, lọc theo người chi và danh mục, khung kỳ ghim trên cùng, nhóm theo ngày, vuốt dòng để Sửa, Xoá, tô sáng khoản vừa lưu | js/screen-ds.js, js/period.js, css/ds.css, css/period.css | Riêng (period dùng chung với GC-TK) |
 | GC-TK | Tab Báo cáo: tổng chi theo kỳ, so với kỳ trước, diễn biến theo ngày hoặc tháng, theo danh mục, theo người chi | js/screen-tk.js, css/tk.css | Riêng |
-| GC-FAB | Nút + đỏ nổi trên mọi tab | js/fab.js, css/fab.css | Riêng |
+| GC-FAB | Nút + đỏ nổi trên mọi tab, giữ để kéo, thả ra hít mép trái/phải cách 16px, nhớ vị trí | js/fab.js, css/fab.css | Riêng |
 | GC-CAIDAT | Tab Cài đặt: tên máy, người dùng máy này, sáng tối, thêm sửa ẩn danh mục và thành viên (nhóm Hạn mức bên trong là GC-HANMUC, Gộp dữ liệu là GC-GOP, Sao lưu là GC-SAOLUU, Ứng dụng là GC-PWA) | js/screen-caidat.js, css/caidat.css | Riêng |
 | GC-CHAO | Màn chào lần đầu mở app: máy đầu tiên (sổ chính) hoặc nạp file từ sổ chính, đặt tên máy, chọn bạn là ai | js/welcome.js, css/welcome.css | Riêng |
 | GC-HANMUC | Hạn mức tháng cho từng danh mục: nhóm Hạn mức trong Cài đặt, bảng đặt hạn mức, thanh hạn mức ở Báo cáo, nhắc khi chạm 80% và khi vượt | js/budget.js, css/budget.css | Riêng |

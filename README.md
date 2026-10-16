@@ -29,7 +29,7 @@ Cách gọi mã để sửa từng phần: xem [MODULES.md](MODULES.md).
 | GC-THEME | css/theme.css, js/ui.js | Xong (v0.1) |
 | GC-NAV | js/nav.js, css/nav.css, js/app.js, index.html | Xong (v0.1) |
 | GC-FORM | js/form.js, js/calc.js, js/picker.js, css/form.css | Xong (v0.1) |
-| GC-FAB | js/fab.js, css/fab.css | v0.1: nút cố định. v1.0: kéo thả |
+| GC-FAB | js/fab.js, css/fab.css | Xong (v1.0): kéo thả, hít mép, nhớ vị trí |
 | GC-DS | js/screen-ds.js, css/ds.css | Xong (v0.5): kỳ Hôm nay, Hôm qua, Tuần, Tháng, Năm; lọc; vuốt Sửa, Xoá |
 | GC-TK | js/screen-tk.js, css/tk.css | Xong (v0.5), thêm thanh hạn mức (v0.8) |
 | GC-HANMUC | js/budget.js, css/budget.css | Xong (v0.8) |
