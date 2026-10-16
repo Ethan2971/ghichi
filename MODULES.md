@@ -47,5 +47,5 @@ nào có thể bị ảnh hưởng và kiểm tra lại các phần đó sau khi
 
 ## Quay lại bản cũ
 
-Mỗi lần sửa là một commit riêng trên GitHub, bản chốt có nhãn (ví dụ `v0.1.0`). Nếu một lần sửa
+Mỗi lần sửa là một commit riêng trên GitHub. Bản chốt v0.1.0 là commit `65ead9d`. Nếu một lần sửa
 không vừa ý, chỉ cần nhắn `Quay lại GC-FORM như bản v0.1.0` hoặc `Bỏ lần sửa GC-DS vừa rồi`.
