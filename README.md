@@ -3,6 +3,8 @@
 App ghi chi tiêu gia đình: HTML tĩnh, lưu trên máy, chạy trên web và Android (PWA).
 Kế hoạch, bảng mã module và mô hình dữ liệu nằm trong tài liệu kế hoạch của dự án.
 
+Link app: https://ghichi.vercel.app/ (xem thử với dữ liệu giả: https://ghichi.vercel.app/?demo)
+
 ## Chạy thử trên máy tính
 
 ```
