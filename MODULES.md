@@ -76,6 +76,6 @@ Mỗi lần sửa là một commit riêng trên GitHub. Các bản chốt:
 | v0.1.0 | `65ead9d` | Nhập khoản chi, danh sách theo tháng, dữ liệu giả |
 | v0.5.0 | `75e1372` | Lưu thật trên máy, màn chào, cài đặt, kỳ và lọc, báo cáo, sao lưu |
 | v0.8.0 | `80fbcc9` | Hạn mức, gộp dữ liệu cả nhà, nhắc sao lưu |
-| v1.0.0 | (ghi sau khi chốt) | Cài lên điện thoại, chạy khi mất mạng, biểu tượng mới, thông báo thêm nhanh, nút + kéo thả, hiệu ứng |
+| v1.0.0 | `4045468` | Cài lên điện thoại, chạy khi mất mạng, biểu tượng mới, thông báo thêm nhanh, nút + kéo thả, hiệu ứng |
 
 Nếu một lần sửa không vừa ý, chỉ cần nhắn `Quay lại GC-FORM như bản v1.0.0` hoặc `Bỏ lần sửa GC-DS vừa rồi`.
